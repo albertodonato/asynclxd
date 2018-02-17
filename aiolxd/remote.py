@@ -10,7 +10,10 @@ from aiohttp import (
 )
 from toolrack.log import Loggable
 
-from . import api
+from .api import (
+    Collection,
+    request,
+)
 from .uri import RemoteURI
 
 
@@ -22,7 +25,7 @@ class Remote(Loggable):
     """LXD server remote."""
 
     # collection accessors
-    images = api.Collection(api.images.Images)
+    images = Collection('Images')
 
     _session = None
 
@@ -52,7 +55,7 @@ class Remote(Loggable):
         assert self._session, 'Must be called in a session'
         path = self._full_path(path)
         self.logger.debug('{method} {path}'.format(method=method, path=path))
-        return await api.request(self._session, method, path)
+        return await request(self._session, method, path)
 
     def _full_path(self, path):
         if not path.startswith('/'):

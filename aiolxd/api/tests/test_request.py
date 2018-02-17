@@ -1,37 +1,14 @@
-from unittest import TestCase
-
 from toolrack.testing.async import LoopTestCase
 
-from .. import (
-    Collection,
-    request,
-    ResponseError,
-)
 from .testing import (
     FakeSession,
     make_error_response,
     make_sync_response,
 )
-
-
-class TestCollection(TestCase):
-
-    def test_get(self):
-        """Getting a collection returns an instance for the remote."""
-
-        class SampleCollection:
-
-            def __init__(self, remote):
-                self.remote = remote
-
-        class SampleRemote:
-
-            collection = Collection(SampleCollection)
-
-        remote = SampleRemote()
-        collection = remote.collection
-        self.assertIsInstance(collection, SampleCollection)
-        self.assertIs(collection.remote, remote)
+from ..request import (
+    request,
+    ResponseError,
+)
 
 
 class TestRequest(LoopTestCase):
