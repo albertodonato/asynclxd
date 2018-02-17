@@ -27,6 +27,7 @@ class Remote(Loggable):
     # collection accessors
     containers = Collection('Containers')
     images = Collection('Images')
+    networks = Collection('Networks')
 
     _session = None
 
