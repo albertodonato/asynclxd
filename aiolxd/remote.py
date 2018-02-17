@@ -25,6 +25,7 @@ class Remote(Loggable):
     """LXD server remote."""
 
     # collection accessors
+    containers = Collection('Containers')
     images = Collection('Images')
 
     _session = None
