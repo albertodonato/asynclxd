@@ -29,6 +29,7 @@ class Remote(Loggable):
     images = Collection('Images')
     networks = Collection('Networks')
 
+    _session_factory = ClientSession  # for testing
     _session = None
 
     def __init__(self, uri, certs=None, version='1.0'):
@@ -40,7 +41,7 @@ class Remote(Loggable):
         return '{cls}({uri})'.format(cls=self.__class__.__name__, uri=self.uri)
 
     async def __aenter__(self):
-        self._session = ClientSession(connector=self._connector())
+        self._session = self._session_factory(connector=self._connector())
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
@@ -70,10 +71,10 @@ class Remote(Loggable):
             return UnixConnector(path=self.uri.path)
 
         ssl_context = None
-        if self.certs:
+        if self.certs:  # pragma: no cover
             ssl_context = ssl.create_default_context(
                 purpose=ssl.Purpose.CLIENT_AUTH)
             ssl_context.load_verify_locations(cafile=self.certs.server_cert)
             ssl_context.load_cert_chain(
                 self.certs.client_cert, keyfile=self.certs.client_key)
-        return TCPConnector(ssl_context=ssl_context)
+        return TCPConnector(ssl=ssl_context)

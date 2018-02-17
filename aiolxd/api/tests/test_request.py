@@ -1,13 +1,13 @@
 from toolrack.testing.async import LoopTestCase
 
-from .testing import (
-    FakeSession,
-    make_error_response,
-    make_sync_response,
-)
 from ..request import (
     request,
     ResponseError,
+)
+from ..testing import (
+    FakeSession,
+    make_error_response,
+    make_sync_response,
 )
 
 

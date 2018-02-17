@@ -1,16 +1,34 @@
 """API testing helpers"""
 
 
+class FakeRemote:
+    """A fake Remote class"""
+
+    version = '1.0'
+
+    def __init__(self, responses=None):
+        self.responses = responses or []
+        self.calls = []
+
+    async def request(self, method, path):
+        self.calls.append((method, path))
+        return self.responses.pop(0)
+
+
 class FakeSession:
     """A fake session class."""
 
-    def __init__(self, responses=None):
+    def __init__(self, connector=None, responses=None):
+        self.connector = connector
         self.responses = responses or []
         self.calls = []
 
     async def request(self, method, path, headers=None):
         self.calls.append((method, path, headers))
         return FakeResponse(self.responses.pop(0))
+
+    async def close(self):
+        pass
 
 
 class FakeResponse:
