@@ -1,4 +1,5 @@
 from unittest import TestCase
+from textwrap import dedent
 
 from toolrack.testing.async import LoopTestCase
 
@@ -91,3 +92,19 @@ class TestResponse(TestCase):
         self.assertEqual(response.etag, 'abcde')
         self.assertEqual(response.type, 'sync')
         self.assertEqual(response.metadata, {'some': 'content'})
+
+    def test_pprint(self):
+        """The pprint method pretty-prints the response."""
+        headers = {'Etag': 'abcde', 'Location': '/some/url'}
+        content = {
+            'type': 'sync',
+            'metadata': {'some': 'content'}}
+        response = Response(200, headers, content)
+        self.assertEqual(
+            dedent("""\
+            {'etag': 'abcde',
+             'http-code': 200,
+             'location': '/some/url',
+             'metadata': {'some': 'content'},
+             'type': 'sync'}"""),
+            response.pprint())

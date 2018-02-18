@@ -1,5 +1,7 @@
 """Perform requests to the API."""
 
+from pprint import pformat
+
 
 class Response:
     """An API response."""
@@ -10,6 +12,16 @@ class Response:
         self.location = http_headers.get('Location')
         self.type = content.get('type')
         self.metadata = content.get('metadata', {})
+
+    def pprint(self):
+        """Pretty-print the response."""
+        data = {
+            'http-code': self.http_code,
+            'etag': self.etag,
+            'location': self.location,
+            'type': self.type,
+            'metadata': self.metadata}
+        return pformat(data)
 
 
 class ResponseError(Exception):
