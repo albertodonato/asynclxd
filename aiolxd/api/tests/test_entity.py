@@ -9,6 +9,7 @@ from ..entity import (
     Collection,
     EntityCollection,
     Entity,
+    NamedEntity,
 )
 from ..request import Response
 from ..testing import FakeRemote
@@ -188,3 +189,19 @@ class TestEntity(LoopTestCase):
         self.assertEqual(response.metadata, {})
         self.assertEqual(
             remote.calls, [(('DELETE', '/entity', None, None, None))])
+
+
+class TestNamedEntity(LoopTestCase):
+
+    async def test_rename(self):
+        """A named entity can be renamed."""
+        remote = FakeRemote(
+            responses=[Response(204, {'Location': '/new-entity'}, {})])
+        entity = NamedEntity(remote, '/entity')
+        response = await entity.rename('new-entity')
+        self.assertEqual(response.http_code, 204)
+        self.assertEqual(response.metadata, {})
+        self.assertEqual(
+            remote.calls,
+            [(('POST', '/entity', None, None, {'name': 'new-entity'}))])
+        self.assertEqual(entity.uri, '/new-entity')

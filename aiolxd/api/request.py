@@ -7,6 +7,7 @@ class Response:
     def __init__(self, http_code, http_headers, content):
         self.http_code = http_code
         self.etag = http_headers.get('Etag')
+        self.location = http_headers.get('Location')
         self.type = content.get('type')
         self.metadata = content.get('metadata', {})
 

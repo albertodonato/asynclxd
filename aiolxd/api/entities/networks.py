@@ -1,12 +1,12 @@
 """Network-related entities for the API."""
 
 from ..entity import (
-    Entity,
     EntityCollection,
+    NamedEntity,
 )
 
 
-class Network(Entity):
+class Network(NamedEntity):
     """API entity for networks."""
 
 

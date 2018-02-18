@@ -15,8 +15,10 @@ class FakeRemote:
     async def request(self, method, path, params=None, headers=None,
                       content=None):
         self.calls.append((method, path, params, headers, content))
-        return Response(
-            200, {}, make_sync_response(self.responses.pop(0)))
+        response = self.responses.pop(0)
+        if isinstance(response, Response):
+            return response
+        return Response(200, {}, make_sync_response(response))
 
 
 class FakeSession:

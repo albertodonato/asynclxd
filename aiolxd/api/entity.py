@@ -99,3 +99,22 @@ class Entity:
         if etag and self._response and self._response.etag:
             headers['Etag'] = self._response.etag
         return headers or None
+
+
+class NamedEntity(Entity):
+    """An entity with a name.
+
+    Named entities can be renamed via :func:`rename()` call.
+
+    """
+
+    async def rename(self, name):
+        """Rename an entity with the specified name.
+
+        This updates the URI of this entity to the new one.
+        """
+        response = await self._remote.request(
+            'POST', self.uri, content={'name': name})
+        if response.location:
+            self.uri = response.location
+        return response

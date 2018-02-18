@@ -1,12 +1,12 @@
 """Container-related entities for the API."""
 
 from ..entity import (
-    Entity,
     EntityCollection,
+    NamedEntity,
 )
 
 
-class Container(Entity):
+class Container(NamedEntity):
     """API entity for containers."""
 
 
