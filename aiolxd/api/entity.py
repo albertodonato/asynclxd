@@ -28,6 +28,12 @@ class EntityCollection(metaclass=abc.ABCMeta):
         """Return a copy of this collection which returns raw responses."""
         return self.__class__(self._remote, raw=True)
 
+    async def create(self, details):
+        """Create a new entity in the collection."""
+        response = await self._remote.request(
+            'POST', self._uri(), content=details)
+        return self.entity_class(self._remote, response.location)
+
     def get(self, id):
         """Return a single entity in the collection."""
         return self.entity_class(self._remote, self._uri(id=id))

@@ -55,6 +55,16 @@ class TestEntityCollection(LoopTestCase):
         self.assertFalse(collection._raw)
         self.assertTrue(collection.raw()._raw)
 
+    async def test_create(self):
+        """The create method returns a new instance of entity."""
+        response = Response(
+            201, {'Etag': 'abcde', 'Location': '/entities/new'},
+            {'entity': 'details'})
+        remote = FakeRemote(responses=[response])
+        collection = SampleEntityCollection(remote)
+        entity = await collection.create({'some': 'data'})
+        self.assertEqual(entity.uri, '/entities/new')
+
     async def test_read(self):
         """The read method returns instances of the entity object."""
         remote = FakeRemote(responses=[['/entities/one', '/entities/two']])
