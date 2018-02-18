@@ -51,6 +51,8 @@ class EntityCollection(metaclass=abc.ABCMeta):
 class Entity:
     """An API entity."""
 
+    _response = None
+
     def __init__(self, remote, uri):
         self._remote = remote
         self.uri = uri
@@ -63,16 +65,37 @@ class Entity:
 
     async def read(self):
         """Return details for this entity."""
-        return await self._remote.request('GET', self.uri)
+        self._response = await self._remote.request('GET', self.uri)
+        return self._response
 
-    async def update(self, details):
-        """Update entity details."""
-        return await self._remote.request('PATCH', self.uri, content=details)
+    async def update(self, details, etag=True):
+        """Update entity details.
 
-    async def replace(self, details):
-        """Replace entity details."""
-        return await self._remote.request('PUT', self.uri, content=details)
+        If `etag` is True, Etag header is set with value from last read() call,
+        if available.
+
+        """
+        headers = self._get_headers(etag=etag)
+        return await self._remote.request(
+            'PATCH', self.uri, headers=headers, content=details)
+
+    async def replace(self, details, etag=True):
+        """Replace entity details.
+
+        If `etag` is True, Etag header is set with value from last read() call,
+        if available.
+
+        """
+        headers = self._get_headers(etag=etag)
+        return await self._remote.request(
+            'PUT', self.uri, headers=headers, content=details)
 
     async def delete(self):
         """Delete this entity."""
         return await self._remote.request('DELETE', self.uri)
+
+    def _get_headers(self, etag=False):
+        headers = {}
+        if etag and self._response and self._response.etag:
+            headers['Etag'] = self._response.etag
+        return headers or None
