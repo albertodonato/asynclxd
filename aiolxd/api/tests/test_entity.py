@@ -100,3 +100,12 @@ class TestEntity(LoopTestCase):
         self.assertEqual(response.http_code, 200)
         self.assertEqual(response.metadata, 'some text')
         self.assertEqual(remote.calls, [(('GET', '/entity'))])
+
+    async def test_delete(self):
+        """The delete method makes a DELETE request for the entity."""
+        remote = FakeRemote(responses=[{}])
+        entity = Entity(remote, '/entity')
+        response = await entity.delete()
+        self.assertEqual(response.http_code, 200)
+        self.assertEqual(response.metadata, {})
+        self.assertEqual(remote.calls, [(('DELETE', '/entity'))])

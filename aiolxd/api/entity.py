@@ -64,3 +64,7 @@ class Entity:
     async def read(self):
         """Return details for this entity."""
         return await self._remote.request('GET', self.uri)
+
+    async def delete(self):
+        """Delete this entity."""
+        return await self._remote.request('DELETE', self.uri)
