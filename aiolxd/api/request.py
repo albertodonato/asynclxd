@@ -32,11 +32,6 @@ async def request(session, method, path, params=None, headers=None,
         headers['Content-Type'] = 'application/json'
     response = await session.request(
         method, path, params=params, headers=headers, json=content)
-    return await _parse_response(response)
-
-
-async def _parse_response(response):
-    """Parse an API reposnse."""
     content = await response.json()
     error_code = content.get('error_code')
     if error_code:
