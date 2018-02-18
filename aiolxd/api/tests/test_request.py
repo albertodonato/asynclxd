@@ -29,22 +29,41 @@ class TestRequest(LoopTestCase):
         self.assertEqual(resp.metadata, ['/1.0'])
         self.assertEqual(
             self.session.calls,
-            [('GET', '/', {'Accept': 'application/json'}, None)])
+            [('GET', '/', None, {'Accept': 'application/json'}, None)])
 
     async def test_request_with_content(self):
         """The request method can include content in the request."""
         response = make_sync_response(metadata=['response'])
         self.session.responses.append(response)
         content = {'some': 'content'}
-        resp = await request(self.session, 'POST', '/', content=content)
-        self.assertEqual(resp.http_code, 200)
-        self.assertEqual(resp.metadata, ['response'])
+        await request(self.session, 'POST', '/', content=content)
         self.assertEqual(
             self.session.calls,
-            [('POST', '/',
+            [('POST', '/', None,
               {'Accept': 'application/json',
                'Content-Type': 'application/json'},
               content)])
+
+    async def test_request_with_params(self):
+        """The request method can include params in the request."""
+        response = make_sync_response(metadata=['response'])
+        self.session.responses.append(response)
+        params = {'a': 'param'}
+        await request(self.session, 'POST', '/', params=params)
+        self.assertEqual(
+            self.session.calls,
+            [('POST', '/', params, {'Accept': 'application/json'}, None)])
+
+    async def test_request_with_headers(self):
+        """The request method can include extra headers in the request."""
+        response = make_sync_response(metadata=['response'])
+        self.session.responses.append(response)
+        headers = {'X-Sample': 'value'}
+        await request(self.session, 'POST', '/', headers=headers)
+        self.assertEqual(
+            self.session.calls,
+            [('POST', '/', None,
+              {'Accept': 'application/json', 'X-Sample': 'value'}, None)])
 
     async def test_request_error(self):
         """The request method raises an error on failed requests."""

@@ -70,14 +70,17 @@ class Remote(Loggable):
         response = await self.request('GET', '/')
         return [version.lstrip('/') for version in response.metadata]
 
-    async def request(self, method, path, content=None):
+    async def request(self, method, path, params=None, headers=None,
+                      content=None):
         """Perform an API request within the session."""
         if not self._session:
             raise SessionError('Not in a session')
 
         path = self._full_path(path)
         self.logger.debug('{method} {path}'.format(method=method, path=path))
-        return await request(self._session, method, path, content=content)
+        return await request(
+            self._session, method, path, params=params, headers=headers,
+            content=content)
 
     def _full_path(self, path):
         if not path.startswith('/'):
