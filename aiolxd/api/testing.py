@@ -12,8 +12,8 @@ class FakeRemote:
         self.responses = responses or []
         self.calls = []
 
-    async def request(self, method, path):
-        self.calls.append((method, path))
+    async def request(self, method, path, content=None):
+        self.calls.append((method, path, content))
         return Response(
             200, {}, make_sync_response(self.responses.pop(0)))
 

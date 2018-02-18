@@ -11,7 +11,7 @@ class Collection:
         self.collection = getattr(entities, collection_name)
 
     def __get__(self, obj, cls=None):
-        return self.collection(obj)
+        return self.collection(obj._remote)
 
 
 class EntityCollection(metaclass=abc.ABCMeta):
@@ -64,6 +64,14 @@ class Entity:
     async def read(self):
         """Return details for this entity."""
         return await self._remote.request('GET', self.uri)
+
+    async def update(self, details):
+        """Update entity details."""
+        return await self._remote.request('PATCH', self.uri, content=details)
+
+    async def replace(self, details):
+        """Replace entity details."""
+        return await self._remote.request('PUT', self.uri, content=details)
 
     async def delete(self):
         """Delete this entity."""
