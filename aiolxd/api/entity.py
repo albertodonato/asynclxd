@@ -28,16 +28,23 @@ class EntityCollection(metaclass=abc.ABCMeta):
         """Return a copy of this collection which returns raw responses."""
         return self.__class__(self._remote, raw=True)
 
+    def get(self, id):
+        """Return a single entity in the collection."""
+        return self.entity_class(self._remote, self._uri(id=id))
+
     async def read(self):
-        """Return the list of entities for this collection."""
+        """Return entities for this collection."""
         response = await self._remote.request('GET', self._uri())
         if self._raw:
             return response
         return [self.entity_class(self._remote, uri) for uri in response]
 
-    def _uri(self):
-        return '/{version}/{uri_name}'.format(
+    def _uri(self, id=None):
+        uri = '/{version}/{uri_name}'.format(
             version=self._remote.version, uri_name=self.uri_name)
+        if id:
+            uri += '/{id}'.format(id=id)
+        return uri
 
 
 class Entity:

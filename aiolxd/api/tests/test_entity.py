@@ -65,6 +65,12 @@ class TestEntityCollection(LoopTestCase):
         self.assertEqual(
             await collection.read(), ['/entities/one', '/entities/two'])
 
+    def test_get(self):
+        """The get method returns a single entity."""
+        collection = SampleEntityCollection(FakeRemote())
+        entity = collection.get('a-entity')
+        self.assertEqual(entity.uri, '/1.0/sample-entity/a-entity')
+
 
 class TestEntity(LoopTestCase):
 
