@@ -28,7 +28,8 @@ class EntityCollection(metaclass=abc.ABCMeta):
         """Return a copy of this collection which returns raw responses."""
         return self.__class__(self._remote, raw=True)
 
-    async def get(self):
+    async def read(self):
+        """Return the list of entities for this collection."""
         response = await self._remote.request('GET', self._uri())
         if self._raw:
             return response
@@ -52,5 +53,6 @@ class Entity:
     def __eq__(self, other):
         return (self._remote, self.uri) == (other._remote, other.uri)
 
-    async def get(self):
+    async def read(self):
+        """Return details for this entity."""
         return await self._remote.request('GET', self.uri)

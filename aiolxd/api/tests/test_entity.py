@@ -22,7 +22,7 @@ class SampleEntityCollection(EntityCollection):
 class TestCollection(TestCase):
 
     @mock.patch('aiolxd.api.entities')
-    def test_get(self, mock_entities):
+    def test_read(self, mock_entities):
         """Getting a collection returns an instance for the remote."""
 
         class SampleCollection:
@@ -50,20 +50,20 @@ class TestEntityCollection(LoopTestCase):
         self.assertFalse(collection._raw)
         self.assertTrue(collection.raw()._raw)
 
-    async def test_get(self):
-        """The get method returns instances of the entity object."""
+    async def test_read(self):
+        """The read method returns instances of the entity object."""
         remote = FakeRemote(responses=[['/entities/one', '/entities/two']])
         collection = SampleEntityCollection(remote)
         self.assertEqual(
-            await collection.get(),
+            await collection.read(),
             [Entity(remote, '/entities/one'), Entity(remote, '/entities/two')])
 
-    async def test_get_raw(self):
-        """The get method returns the raw response if raw=True."""
+    async def test_read_raw(self):
+        """The read method returns the raw response if raw=True."""
         remote = FakeRemote(responses=[['/entities/one', '/entities/two']])
         collection = SampleEntityCollection(remote, raw=True)
         self.assertEqual(
-            await collection.get(), ['/entities/one', '/entities/two'])
+            await collection.read(), ['/entities/one', '/entities/two'])
 
 
 class TestEntity(LoopTestCase):
@@ -86,9 +86,9 @@ class TestEntity(LoopTestCase):
         self.assertNotEqual(
             Entity(remote, '/entity1'), Entity(remote, '/entity2'))
 
-    async def test_get(self):
-        """The get method makes a GET request for the entity."""
+    async def test_read(self):
+        """The read method makes a GET request for the entity."""
         remote = FakeRemote(responses=['some text'])
         entity = Entity(remote, '/entity')
-        self.assertEqual(await entity.get(), 'some text')
+        self.assertEqual(await entity.read(), 'some text')
         self.assertEqual(remote.calls, [(('GET', '/entity'))])

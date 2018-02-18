@@ -1,6 +1,3 @@
-import ssl
-from unittest import mock
-
 from aiohttp import (
     TCPConnector,
     UnixConnector,
@@ -11,10 +8,7 @@ from ..api.testing import (
     FakeSession,
     make_sync_response,
 )
-from ..remote import (
-    Remote,
-    SSLCerts,
-)
+from ..remote import Remote
 
 
 class TestRemote(LoopTestCase):

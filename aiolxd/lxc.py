@@ -11,7 +11,8 @@ from .remote import (
 )
 
 
-def get_lxc_remotes(config_dir=None):
+def get_remotes(config_dir=None):
+    """Return a list of :class:`Remote`s from the lxc config."""
     if config_dir is None:
         config_dir = lxc_config_dir()
     config_file = Path(config_dir) / 'config.yml'
