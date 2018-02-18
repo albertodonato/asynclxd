@@ -26,8 +26,8 @@ class FakeSession:
         self.responses = responses or []
         self.calls = []
 
-    async def request(self, method, path, headers=None):
-        self.calls.append((method, path, headers))
+    async def request(self, method, path, headers=None, json=None):
+        self.calls.append((method, path, headers, json))
         return FakeHTTPResponse(self.responses.pop(0))
 
     async def close(self):

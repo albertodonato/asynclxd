@@ -22,10 +22,13 @@ class ResponseError(Exception):
                 code=self.code, message=self.message))
 
 
-async def request(session, method, path):
+async def request(session, method, path, content=None):
     """Perform an API request with the session."""
-    headers = {'Content-Type': 'application/json'}
-    response = await session.request(method, path, headers=headers)
+    headers = {'Accept': 'application/json'}
+    if content:
+        headers['Content-Type'] = 'application/json'
+    response = await session.request(
+        method, path, headers=headers, json=content)
     return await _parse_response(response)
 
 

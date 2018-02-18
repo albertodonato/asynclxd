@@ -36,6 +36,9 @@ class TestCollection(TestCase):
 
             collection = Collection('SampleCollection')
 
+            def __init__(self):
+                self._remote = self
+
         remote = SampleRemote()
         collection = remote.collection
         self.assertIsInstance(collection, SampleCollection)

@@ -21,6 +21,7 @@ class TestRequest(LoopTestCase):
         self.session = FakeSession()
 
     async def test_request(self):
+        """The request method makes an HTTP request and returns a Response."""
         response = make_sync_response(metadata=['/1.0'])
         self.session.responses.append(response)
         resp = await request(self.session, 'GET', '/')
@@ -28,9 +29,25 @@ class TestRequest(LoopTestCase):
         self.assertEqual(resp.metadata, ['/1.0'])
         self.assertEqual(
             self.session.calls,
-            [('GET', '/', {'Content-Type': 'application/json'})])
+            [('GET', '/', {'Accept': 'application/json'}, None)])
+
+    async def test_request_with_content(self):
+        """The request method can include content in the request."""
+        response = make_sync_response(metadata=['response'])
+        self.session.responses.append(response)
+        content = {'some': 'content'}
+        resp = await request(self.session, 'POST', '/', content=content)
+        self.assertEqual(resp.http_code, 200)
+        self.assertEqual(resp.metadata, ['response'])
+        self.assertEqual(
+            self.session.calls,
+            [('POST', '/',
+              {'Accept': 'application/json',
+               'Content-Type': 'application/json'},
+              content)])
 
     async def test_request_error(self):
+        """The request method raises an error on failed requests."""
         response = make_error_response(error='Something went wrong')
         self.session.responses.append(response)
         with self.assertRaises(ResponseError) as cm:

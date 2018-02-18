@@ -40,6 +40,7 @@ class Remote(Loggable):
         self.uri = RemoteURI(uri)
         self.certs = certs
         self.version = version
+        self._remote = self
 
     def __repr__(self):
         return '{cls}({uri})'.format(cls=self.__class__.__name__, uri=self.uri)
@@ -69,14 +70,14 @@ class Remote(Loggable):
         response = await self.request('GET', '/')
         return [version.lstrip('/') for version in response.metadata]
 
-    async def request(self, method, path):
+    async def request(self, method, path, content=None):
         """Perform an API request within the session."""
         if not self._session:
             raise SessionError('Not in a session')
 
         path = self._full_path(path)
         self.logger.debug('{method} {path}'.format(method=method, path=path))
-        return await request(self._session, method, path)
+        return await request(self._session, method, path, content=content)
 
     def _full_path(self, path):
         if not path.startswith('/'):

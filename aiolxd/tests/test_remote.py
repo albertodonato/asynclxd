@@ -68,7 +68,23 @@ class TestRemote(LoopTestCase):
         self.assertEqual(
             session.calls,
             [('GET', 'https://example.com:8443/',
-              {'Content-Type': 'application/json'})])
+              {'Accept': 'application/json'}, None)])
+        self.assertEqual(response.metadata, ['response'])
+
+    async def test_request_with_content(self):
+        """Requets can include content."""
+        session = FakeSession(responses=[make_sync_response(['response'])])
+        self.remote._session_factory = lambda connector=None: session
+
+        content = {'some': 'content'}
+        async with self.remote:
+            response = await self.remote.request('POST', '/', content=content)
+        self.assertEqual(
+            session.calls,
+            [('POST', 'https://example.com:8443/',
+              {'Accept': 'application/json',
+               'Content-Type': 'application/json'},
+              content)])
         self.assertEqual(response.metadata, ['response'])
 
     async def test_request_not_in_session(self):
@@ -87,7 +103,7 @@ class TestRemote(LoopTestCase):
         self.assertEqual(
             session.calls,
             [('GET', 'https://example.com:8443/1.0/relative-path',
-              {'Content-Type': 'application/json'})])
+              {'Accept': 'application/json'}, None)])
 
     async def test_connector_unix(self):
         """If the URI is for a UNIX socket, a UnixConnector is used."""
@@ -116,5 +132,5 @@ class TestRemote(LoopTestCase):
         self.assertEqual(
             session.calls,
             [('GET', 'https://example.com:8443/',
-              {'Content-Type': 'application/json'})])
+              {'Accept': 'application/json'}, None)])
         self.assertEqual(response, ['1.0', '2.0'])
