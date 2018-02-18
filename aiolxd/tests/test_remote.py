@@ -8,48 +8,82 @@ from ..api.testing import (
     FakeSession,
     make_sync_response,
 )
-from ..remote import Remote
+from ..remote import (
+    Remote,
+    SessionError,
+)
 
 
 class TestRemote(LoopTestCase):
 
+    def setUp(self):
+        super().setUp()
+        self.remote = Remote('https://example.com:8443')
+
     def test_repr(self):
         """The object repr includes the URI."""
-        remote = Remote('https://example.com:8443')
-        self.assertEqual(repr(remote), 'Remote(https://example.com:8443/)')
+        self.assertEqual(
+            repr(self.remote), 'Remote(https://example.com:8443/)')
 
     async def test_context_manager(self):
         """A session is created when using the class as context manager."""
-        remote = Remote('https://example.com:8443')
-        remote._session_factory = FakeSession
+        self.remote._session_factory = FakeSession
 
-        self.assertIsNone(remote._session)
-        async with remote:
-            self.assertIsInstance(remote._session, FakeSession)
-        self.assertIsNone(remote._session)
+        self.assertIsNone(self.remote._session)
+        async with self.remote:
+            self.assertIsInstance(self.remote._session, FakeSession)
+        self.assertIsNone(self.remote._session)
+
+    def test_open(self):
+        """The open method creates a session."""
+        self.remote.open()
+        self.assertIsNotNone(self.remote._session)
+
+    def test_open_already_in_session(self):
+        """A SessionError is raised if already in a session."""
+        self.remote.open()
+        with self.assertRaises(SessionError) as cm:
+            self.remote.open()
+        self.assertEqual(str(cm.exception), 'Already in a session')
+
+    async def test_close(self):
+        """The close method ends a session."""
+        self.remote.open()
+        await self.remote.close()
+        self.assertIsNone(self.remote._session)
+
+    async def test_close_not_in_session(self):
+        """A SessionError is raised if not a session."""
+        with self.assertRaises(SessionError) as cm:
+            await self.remote.close()
+        self.assertEqual(str(cm.exception), 'Not in a session')
 
     async def test_request(self):
         """Requests can be performed with the server."""
         session = FakeSession(responses=[make_sync_response(['response'])])
-        remote = Remote('https://example.com:8443')
-        remote._session_factory = lambda connector=None: session
+        self.remote._session_factory = lambda connector=None: session
 
-        async with remote:
-            response = await remote.request('GET', '/')
+        async with self.remote:
+            response = await self.remote.request('GET', '/')
         self.assertEqual(
             session.calls,
             [('GET', 'https://example.com:8443/',
               {'Content-Type': 'application/json'})])
         self.assertEqual(response.metadata, ['response'])
 
+    async def test_request_not_in_session(self):
+        """A SessionError is raised if request is not called in a session."""
+        with self.assertRaises(SessionError) as cm:
+            await self.remote.request('GET', '/')
+        self.assertEqual(str(cm.exception), 'Not in a session')
+
     async def test_request_relative_path(self):
         """If request path is relative, it's prefixed with the API version."""
         session = FakeSession(responses=[make_sync_response()])
-        remote = Remote('https://example.com:8443')
-        remote._session_factory = lambda connector=None: session
+        self.remote._session_factory = lambda connector=None: session
 
-        async with remote:
-            await remote.request('GET', 'relative-path')
+        async with self.remote:
+            await self.remote.request('GET', 'relative-path')
         self.assertEqual(
             session.calls,
             [('GET', 'https://example.com:8443/1.0/relative-path',
@@ -65,21 +99,20 @@ class TestRemote(LoopTestCase):
 
     async def test_connector_https(self):
         """If the URI is https, a TCPConnector is used."""
-        remote = Remote('https://example.com:8443')
-        remote._session_factory = FakeSession
-        async with remote:
-            self.assertIsInstance(remote._session.connector, TCPConnector)
-            self.assertIsNone(remote._session.connector._ssl)
+        self.remote._session_factory = FakeSession
+        async with self.remote:
+            self.assertIsInstance(
+                self.remote._session.connector, TCPConnector)
+            self.assertIsNone(self.remote._session.connector._ssl)
 
     async def test_api_versions(self):
         """It's possibel to query for API versions."""
         session = FakeSession(
             responses=[make_sync_response(['/1.0', '/2.0'])])
-        remote = Remote('https://example.com:8443')
-        remote._session_factory = lambda connector=None: session
+        self.remote._session_factory = lambda connector=None: session
 
-        async with remote:
-            response = await remote.api_versions()
+        async with self.remote:
+            response = await self.remote.api_versions()
         self.assertEqual(
             session.calls,
             [('GET', 'https://example.com:8443/',

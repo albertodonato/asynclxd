@@ -21,6 +21,10 @@ from .uri import RemoteURI
 SSLCerts = namedtuple('SSLCerts', ['server_cert', 'client_cert', 'client_key'])
 
 
+class SessionError(Exception):
+    """Remote session is invalid."""
+
+
 class Remote(Loggable):
     """LXD server remote."""
 
@@ -41,10 +45,22 @@ class Remote(Loggable):
         return '{cls}({uri})'.format(cls=self.__class__.__name__, uri=self.uri)
 
     async def __aenter__(self):
-        self._session = self._session_factory(connector=self._connector())
+        self.open()
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
+        await self.close()
+
+    def open(self):
+        """Start a session with the remote."""
+        if self._session:
+            raise SessionError('Already in a session')
+        self._session = self._session_factory(connector=self._connector())
+
+    async def close(self):
+        """Terminate the session with the remote."""
+        if not self._session:
+            raise SessionError('Not in a session')
         await self._session.close()
         self._session = None
 
@@ -55,7 +71,9 @@ class Remote(Loggable):
 
     async def request(self, method, path):
         """Perform an API request within the session."""
-        assert self._session, 'Must be called in a session'
+        if not self._session:
+            raise SessionError('Not in a session')
+
         path = self._full_path(path)
         self.logger.debug('{method} {path}'.format(method=method, path=path))
         return await request(self._session, method, path)
