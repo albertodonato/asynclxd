@@ -14,7 +14,7 @@ from .remote import (
 def get_remotes(config_dir=None):
     """Return a list of :class:`Remote`s from the lxc config."""
     if config_dir is None:
-        config_dir = lxc_config_dir()
+        config_dir = cli_config_dir()
     config_file = Path(config_dir) / 'config.yml'
     try:
         with config_file.open() as fd:
@@ -28,7 +28,7 @@ def get_remotes(config_dir=None):
         if conf.get('protocol') in ('lxd', None)}
 
 
-def lxc_config_dir():
+def cli_config_dir():
     """Return the configuration directory for the 'lxc' CLI."""
     return Path(xdg_config_home) / 'lxc'
 

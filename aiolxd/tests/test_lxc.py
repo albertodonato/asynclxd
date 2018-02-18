@@ -7,8 +7,8 @@ from toolrack.testing import (
 import yaml
 
 from ..lxc import (
+    cli_config_dir,
     get_remotes,
-    lxc_config_dir,
 )
 
 
@@ -22,7 +22,7 @@ class TestGetRemotes(TestCase):
         return self.tempdir.mkfile(
             path='config.yml', content=yaml.dump(config))
 
-    @mock.patch('aiolxd.lxc.lxc_config_dir')
+    @mock.patch('aiolxd.lxc.cli_config_dir')
     def test_config_dir_default(self, mock_config_dir):
         """By default, the 'lxc' CLI config dir is used."""
         mock_config_dir.return_value = '/some/dir'
@@ -109,9 +109,9 @@ class TestGetRemotes(TestCase):
         self.assertIsNotNone(certs.client_key)
 
 
-class TestLXCConfigDir(TestCase):
+class TestCLIConfigDir(TestCase):
 
-    def test_lxc_config_dir(self):
-        """lxc_config_dir returns the directory for the lxc CLI config."""
-        config_dir = lxc_config_dir()
+    def test_cli_config_dir(self):
+        """cli_config_dir returns the directory for the lxc CLI config."""
+        config_dir = cli_config_dir()
         self.assertEqual(config_dir.name, 'lxc')
