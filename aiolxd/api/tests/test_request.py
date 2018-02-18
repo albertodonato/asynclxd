@@ -1,7 +1,10 @@
+from unittest import TestCase
+
 from toolrack.testing.async import LoopTestCase
 
 from ..request import (
     request,
+    Response,
     ResponseError,
 )
 from ..testing import (
@@ -20,9 +23,9 @@ class TestRequest(LoopTestCase):
     async def test_request(self):
         response = make_sync_response(metadata=['/1.0'])
         self.session.responses.append(response)
-        self.assertEqual(
-            await request(self.session, 'GET', '/'),
-            ['/1.0'])
+        resp = await request(self.session, 'GET', '/')
+        self.assertEqual(resp.http_code, 200)
+        self.assertEqual(resp.metadata, ['/1.0'])
         self.assertEqual(
             self.session.calls,
             [('GET', '/', {'Content-Type': 'application/json'})])
@@ -37,3 +40,18 @@ class TestRequest(LoopTestCase):
         self.assertEqual(
             str(cm.exception),
             'API request failed with 400: Something went wrong')
+
+
+class TestResponse(TestCase):
+
+    def test_instantiate(self):
+        """A Response can be instantiated."""
+        headers = {'Etag': 'abcde'}
+        content = {
+            'type': 'sync',
+            'metadata': {'some': 'content'}}
+        response = Response(200, headers, content)
+        self.assertEqual(response.http_code, 200)
+        self.assertEqual(response.etag, 'abcde')
+        self.assertEqual(response.type, 'sync')
+        self.assertEqual(response.metadata, {'some': 'content'})

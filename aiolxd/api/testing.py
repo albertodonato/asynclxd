@@ -1,5 +1,7 @@
 """API testing helpers"""
 
+from .request import Response
+
 
 class FakeRemote:
     """A fake Remote class"""
@@ -12,7 +14,8 @@ class FakeRemote:
 
     async def request(self, method, path):
         self.calls.append((method, path))
-        return self.responses.pop(0)
+        return Response(
+            200, {}, make_sync_response(self.responses.pop(0)))
 
 
 class FakeSession:
@@ -25,16 +28,18 @@ class FakeSession:
 
     async def request(self, method, path, headers=None):
         self.calls.append((method, path, headers))
-        return FakeResponse(self.responses.pop(0))
+        return FakeHTTPResponse(self.responses.pop(0))
 
     async def close(self):
         pass
 
 
-class FakeResponse:
+class FakeHTTPResponse:
     """A fake HTTP response."""
 
-    def __init__(self, content):
+    def __init__(self, content, status=200, headers=None):
+        self.status = status
+        self.headers = headers or {}
         self.content = content
 
     async def json(self):

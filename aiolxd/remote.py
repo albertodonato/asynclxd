@@ -50,8 +50,8 @@ class Remote(Loggable):
 
     async def api_versions(self):
         """Return a list of available API versions."""
-        return [
-            version.lstrip('/') for version in await self.request('GET', '/')]
+        response = await self.request('GET', '/')
+        return [version.lstrip('/') for version in response.metadata]
 
     async def request(self, method, path):
         """Perform an API request within the session."""

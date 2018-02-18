@@ -96,5 +96,7 @@ class TestEntity(LoopTestCase):
         """The read method makes a GET request for the entity."""
         remote = FakeRemote(responses=['some text'])
         entity = Entity(remote, '/entity')
-        self.assertEqual(await entity.read(), 'some text')
+        response = await entity.read()
+        self.assertEqual(response.http_code, 200)
+        self.assertEqual(response.metadata, 'some text')
         self.assertEqual(remote.calls, [(('GET', '/entity'))])

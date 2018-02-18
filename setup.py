@@ -30,6 +30,6 @@ config = {
         'Development Status :: 3 - Alpha',
         ('License :: OSI Approved :: '
          'GNU Lesser General Public License v3 or later (LGPLv3+)'),
-        'Programming Language :: Python']}
+        'Programming Language :: Python :: 3 :: Only']}
 
 setup(**config)

@@ -40,7 +40,7 @@ class TestRemote(LoopTestCase):
             session.calls,
             [('GET', 'https://example.com:8443/',
               {'Content-Type': 'application/json'})])
-        self.assertEqual(response, ['response'])
+        self.assertEqual(response.metadata, ['response'])
 
     async def test_request_relative_path(self):
         """If request path is relative, it's prefixed with the API version."""

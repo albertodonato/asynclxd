@@ -35,9 +35,10 @@ class EntityCollection(metaclass=abc.ABCMeta):
     async def read(self):
         """Return entities for this collection."""
         response = await self._remote.request('GET', self._uri())
+        content = response.metadata
         if self._raw:
-            return response
-        return [self.entity_class(self._remote, uri) for uri in response]
+            return content
+        return [self.entity_class(self._remote, uri) for uri in content]
 
     def _uri(self, id=None):
         uri = '/{version}/{uri_name}'.format(
