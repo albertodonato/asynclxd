@@ -58,7 +58,7 @@ class TestEntityCollection(LoopTestCase):
     async def test_create(self):
         """The create method returns a new instance of entity."""
         response = Response(
-            201, {'Etag': 'abcde', 'Location': '/entities/new'},
+            201, {'ETag': 'abcde', 'Location': '/entities/new'},
             {'entity': 'details'})
         remote = FakeRemote(responses=[response])
         collection = SampleEntityCollection(remote)
@@ -137,21 +137,21 @@ class TestEntity(LoopTestCase):
             remote.calls, [(('PATCH', '/entity', None, None, content))])
 
     async def test_update_with_etag(self):
-        """The update method includes the Etag if cached."""
+        """The update method includes the ETag if cached."""
         remote = FakeRemote(responses=[{}])
         entity = Entity(remote, '/entity')
-        entity._response = Response(200, {'Etag': 'abcde'}, {'key': 'old'})
+        entity._response = Response(200, {'ETag': 'abcde'}, {'key': 'old'})
         content = {'key': 'value'}
         await entity.update(content)
         self.assertEqual(
             remote.calls,
-            [(('PATCH', '/entity', None, {'Etag': 'abcde'}, content))])
+            [(('PATCH', '/entity', None, {'ETag': 'abcde'}, content))])
 
     async def test_update_with_etag_false(self):
-        """The update method doesn't the Etag if not requested."""
+        """The update method doesn't the ETag if not requested."""
         remote = FakeRemote(responses=[{}])
         entity = Entity(remote, '/entity')
-        entity._response = Response(200, {'Etag': 'abcde'}, {'key': 'old'})
+        entity._response = Response(200, {'ETag': 'abcde'}, {'key': 'old'})
         content = {'key': 'value'}
         await entity.update(content, etag=False)
         self.assertEqual(
@@ -170,21 +170,21 @@ class TestEntity(LoopTestCase):
             remote.calls, [(('PUT', '/entity', None, None, content))])
 
     async def test_replace_with_etag(self):
-        """The replace method includes the Etag if cached."""
+        """The replace method includes the ETag if cached."""
         remote = FakeRemote(responses=[{}])
         entity = Entity(remote, '/entity')
-        entity._response = Response(200, {'Etag': 'abcde'}, {'key': 'old'})
+        entity._response = Response(200, {'ETag': 'abcde'}, {'key': 'old'})
         content = {'key': 'value'}
         await entity.replace(content)
         self.assertEqual(
             remote.calls,
-            [(('PUT', '/entity', None, {'Etag': 'abcde'}, content))])
+            [(('PUT', '/entity', None, {'ETag': 'abcde'}, content))])
 
     async def test_replace_with_etag_false(self):
-        """The replace method doesn't include the Etag if not requested."""
+        """The replace method doesn't include the ETag if not requested."""
         remote = FakeRemote(responses=[{}])
         entity = Entity(remote, '/entity')
-        entity._response = Response(200, {'Etag': 'abcde'}, {'key': 'old'})
+        entity._response = Response(200, {'ETag': 'abcde'}, {'key': 'old'})
         content = {'key': 'value'}
         await entity.replace(content, etag=False)
         self.assertEqual(

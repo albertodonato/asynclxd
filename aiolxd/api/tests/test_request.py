@@ -83,7 +83,7 @@ class TestResponse(TestCase):
 
     def test_instantiate(self):
         """A Response can be instantiated."""
-        headers = {'Etag': 'abcde'}
+        headers = {'ETag': 'abcde'}
         content = {
             'type': 'sync',
             'metadata': {'some': 'content'}}
@@ -95,7 +95,7 @@ class TestResponse(TestCase):
 
     def test_pprint(self):
         """The pprint method pretty-prints the response."""
-        headers = {'Etag': 'abcde', 'Location': '/some/url'}
+        headers = {'ETag': 'abcde', 'Location': '/some/url'}
         content = {
             'type': 'sync',
             'metadata': {'some': 'content'}}

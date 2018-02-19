@@ -77,7 +77,7 @@ class Entity:
     async def update(self, details, etag=True):
         """Update entity details.
 
-        If `etag` is True, Etag header is set with value from last read() call,
+        If `etag` is True, ETag header is set with value from last read() call,
         if available.
 
         """
@@ -88,7 +88,7 @@ class Entity:
     async def replace(self, details, etag=True):
         """Replace entity details.
 
-        If `etag` is True, Etag header is set with value from last read() call,
+        If `etag` is True, ETag header is set with value from last read() call,
         if available.
 
         """
@@ -103,7 +103,7 @@ class Entity:
     def _get_headers(self, etag=False):
         headers = {}
         if etag and self._response and self._response.etag:
-            headers['Etag'] = self._response.etag
+            headers['ETag'] = self._response.etag
         return headers or None
 
 
