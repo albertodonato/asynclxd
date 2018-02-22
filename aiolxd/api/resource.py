@@ -1,6 +1,7 @@
 """API resources base classes."""
 
 import abc
+from copy import deepcopy
 
 
 class Collection:
@@ -68,6 +69,24 @@ class Resource:
 
     def __eq__(self, other):
         return (self._remote, self.uri) == (other._remote, other.uri)
+
+    def __getitem__(self, item):
+        if not self._response:
+            raise KeyError(repr(item))
+        return deepcopy(self._response.metadata[item])
+
+    def details(self):
+        """Return details about this resource.
+
+        If a previous read() operation has been performed for this resouce,
+        details from the response are returned, otherwise :data:`None` is
+        returned.
+
+        """
+        if not self._response:
+            return None
+
+        return deepcopy(self._response.metadata)
 
     async def read(self):
         """Return details for this resource."""

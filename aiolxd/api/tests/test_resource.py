@@ -110,6 +110,61 @@ class TestResource(LoopTestCase):
         self.assertNotEqual(
             Resource(remote, '/resource1'), Resource(remote, '/resource2'))
 
+    def test_getitem_no_response(self):
+        """__getitem__ raises KeyError if no response is cached."""
+        resource = Resource(FakeRemote(), '/resource')
+        with self.assertRaises(KeyError):
+            resource['foo']
+
+    async def test_getitem_with_response(self):
+        """__getitem__ raises KeyError if no response is cached."""
+        remote = FakeRemote(responses=[{'key': 'value'}])
+        resource = Resource(remote, '/resource')
+        await resource.read()
+        self.assertEqual(resource['key'], 'value')
+
+    async def test_getitem_unknown_attribute(self):
+        """__getitem__ raises KeyError if an unknown attribute is requeted."""
+        remote = FakeRemote(responses=[{'key': 'value'}])
+        resource = Resource(remote, '/resource')
+        await resource.read()
+        with self.assertRaises(KeyError):
+            resource['unknown']
+
+    def test_details_no_response(self):
+        """If no previous read() was performed, details are empty."""
+        resource = Resource(FakeRemote(), '/resource')
+        self.assertIsNone(resource.details())
+
+    async def test_getitem_returns_copy(self):
+        """__getitem__ returns a copy of the details."""
+        remote = FakeRemote(responses=[{'key': ['foo']}])
+        resource = Resource(remote, '/resource')
+        await resource.read()
+        # modify returned details
+        details = resource['key']
+        details.append('bar')
+        # details in the resource are unchanged
+        self.assertEqual(resource['key'], ['foo'])
+
+    async def test_details(self):
+        """If a read() was performed, details are cached."""
+        remote = FakeRemote(responses=[{'some': 'value'}])
+        resource = Resource(remote, '/resource')
+        await resource.read()
+        self.assertEqual(resource.details(), {'some': 'value'})
+
+    async def test_details_returns_copy(self):
+        """A copy of the details is returned."""
+        remote = FakeRemote(responses=[{'some': 'value'}])
+        resource = Resource(remote, '/resource')
+        await resource.read()
+        # modify returned details
+        details = resource.details()
+        details['another-key'] = 'another value'
+        # details in the resource are unchanged
+        self.assertEqual(resource.details(), {'some': 'value'})
+
     async def test_read(self):
         """The read method makes a GET request for the resource."""
         remote = FakeRemote(responses=['some text'])
