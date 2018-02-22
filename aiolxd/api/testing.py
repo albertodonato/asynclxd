@@ -50,6 +50,14 @@ class FakeHTTPResponse:
         return self.content
 
 
+def make_resource(resource_class, etag=None, details=None):
+    """Return a resource instance with specified details."""
+    resource = resource_class(FakeRemote(), '/resource')
+    resource._etag = etag
+    resource._details = details
+    return resource
+
+
 def make_sync_response(metadata=None):
     """Return a response for a synchronous operation."""
     return {

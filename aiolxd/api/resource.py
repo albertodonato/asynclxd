@@ -92,8 +92,7 @@ class Resource:
     async def read(self):
         """Return details for this resource."""
         response = await self._remote.request('GET', self.uri)
-        self._last_etag = response.etag
-        self._details = response.metadata
+        self._update_cache(response)
         return response
 
     async def update(self, details, etag=True):
@@ -123,10 +122,16 @@ class Resource:
         return await self._remote.request('DELETE', self.uri)
 
     def _get_headers(self, etag=False):
+        """Return headers for a request."""
         headers = {}
         if etag and self._last_etag:
             headers['ETag'] = self._last_etag
         return headers or None
+
+    def _update_cache(self, response):
+        """Update cached information from response."""
+        self._last_etag = response.etag
+        self._details = response.metadata
 
 
 class NamedResource(Resource):
@@ -144,6 +149,7 @@ class NamedResource(Resource):
         """
         response = await self._remote.request(
             'POST', self.uri, content={'name': name})
-        if response.location:
-            self.uri = response.location
+        self._update_cache(response)
+        # URI has changed
+        self.uri = response.location
         return response
