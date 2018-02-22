@@ -58,7 +58,8 @@ class ResourceCollection(metaclass=abc.ABCMeta):
 class Resource:
     """An API resource."""
 
-    _response = None
+    _last_etag = None
+    _details = None
 
     def __init__(self, remote, uri):
         self._remote = remote
@@ -71,9 +72,9 @@ class Resource:
         return (self._remote, self.uri) == (other._remote, other.uri)
 
     def __getitem__(self, item):
-        if not self._response:
+        if not self._details:
             raise KeyError(repr(item))
-        return deepcopy(self._response.metadata[item])
+        return deepcopy(self._details[item])
 
     def details(self):
         """Return details about this resource.
@@ -83,15 +84,17 @@ class Resource:
         returned.
 
         """
-        if not self._response:
+        if not self._details:
             return None
 
-        return deepcopy(self._response.metadata)
+        return deepcopy(self._details)
 
     async def read(self):
         """Return details for this resource."""
-        self._response = await self._remote.request('GET', self.uri)
-        return self._response
+        response = await self._remote.request('GET', self.uri)
+        self._last_etag = response.etag
+        self._details = response.metadata
+        return response
 
     async def update(self, details, etag=True):
         """Update resource details.
@@ -121,8 +124,8 @@ class Resource:
 
     def _get_headers(self, etag=False):
         headers = {}
-        if etag and self._response and self._response.etag:
-            headers['ETag'] = self._response.etag
+        if etag and self._last_etag:
+            headers['ETag'] = self._last_etag
         return headers or None
 
 

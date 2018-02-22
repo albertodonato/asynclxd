@@ -175,13 +175,13 @@ class TestResource(LoopTestCase):
         self.assertEqual(
             remote.calls, [(('GET', '/resource', None, None, None))])
 
-    async def test_read_caches_response(self):
+    async def test_read_caches_response_details(self):
         """The read method caches the response."""
         remote = FakeRemote(responses=['some text'])
         resource = Resource(remote, '/resource')
-        self.assertIsNone(resource._response)
+        self.assertIsNone(resource._details)
         response = await resource.read()
-        self.assertIs(resource._response, response)
+        self.assertEqual(resource._details, response.metadata)
 
     async def test_update(self):
         """The update method makes a PATCH request for the resource."""
@@ -198,7 +198,8 @@ class TestResource(LoopTestCase):
         """The update method includes the ETag if cached."""
         remote = FakeRemote(responses=[{}])
         resource = Resource(remote, '/resource')
-        resource._response = Response(200, {'ETag': 'abcde'}, {'key': 'old'})
+        resource._last_etag = 'abcde'
+        resource._details = {'some': 'value'}
         content = {'key': 'value'}
         await resource.update(content)
         self.assertEqual(
@@ -206,10 +207,11 @@ class TestResource(LoopTestCase):
             [(('PATCH', '/resource', None, {'ETag': 'abcde'}, content))])
 
     async def test_update_with_etag_false(self):
-        """The update method doesn't the ETag if not requested."""
+        """The update method  doesn't use the ETag if not requested."""
         remote = FakeRemote(responses=[{}])
         resource = Resource(remote, '/resource')
-        resource._response = Response(200, {'ETag': 'abcde'}, {'key': 'old'})
+        resource._last_etag = 'abcde'
+        resource._details = {'key': 'old'}
         content = {'key': 'value'}
         await resource.update(content, etag=False)
         self.assertEqual(
@@ -231,7 +233,8 @@ class TestResource(LoopTestCase):
         """The replace method includes the ETag if cached."""
         remote = FakeRemote(responses=[{}])
         resource = Resource(remote, '/resource')
-        resource._response = Response(200, {'ETag': 'abcde'}, {'key': 'old'})
+        resource._last_etag = 'abcde'
+        resource._details = {'key': 'old'}
         content = {'key': 'value'}
         await resource.replace(content)
         self.assertEqual(
@@ -242,7 +245,8 @@ class TestResource(LoopTestCase):
         """The replace method doesn't include the ETag if not requested."""
         remote = FakeRemote(responses=[{}])
         resource = Resource(remote, '/resource')
-        resource._response = Response(200, {'ETag': 'abcde'}, {'key': 'old'})
+        resource._last_etag = 'abcde'
+        resource._details = {'key': 'old'}
         content = {'key': 'value'}
         await resource.replace(content, etag=False)
         self.assertEqual(
