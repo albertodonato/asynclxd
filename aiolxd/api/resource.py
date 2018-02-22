@@ -2,6 +2,10 @@
 
 import abc
 from copy import deepcopy
+from urllib.parse import (
+    quote,
+    unquote,
+)
 
 
 class Collection:
@@ -39,24 +43,45 @@ class ResourceCollection(metaclass=abc.ABCMeta):
         """Return a single resource in the collection."""
         return self.resource_class(self._remote, self._uri(id=id))
 
-    async def read(self):
-        """Return resources for this collection."""
-        response = await self._remote.request('GET', self._uri())
+    async def read(self, recursion=False):
+        """Return resources for this collection.
+
+        If recursion is True, details for resources are fetched in a single
+        request.
+
+        """
+        params = {'recursion': 1} if recursion else None
+        response = await self._remote.request(
+            'GET', self._uri(), params=params)
         content = response.metadata
         if self._raw:
             return content
+
+        if recursion:
+            return [
+                self._resource_from_details(details) for details in content]
         return [self.resource_class(self._remote, uri) for uri in content]
+
+    def _resource_from_details(self, details):
+        """Return a resource instance from its details."""
+        resource_id = details[self.resource_class.id_attribute]
+        resource = self.resource_class(self._remote, self._uri(id=resource_id))
+        resource._details = details
+        return resource
 
     def _uri(self, id=None):
         uri = '/{version}/{uri_name}'.format(
             version=self._remote.version, uri_name=self.uri_name)
         if id:
-            uri += '/{id}'.format(id=id)
+            uri += '/{id}'.format(id=quote(id))
         return uri
 
 
-class Resource:
+class Resource(metaclass=abc.ABCMeta):
     """An API resource."""
+
+    id_attribute = abc.abstractproperty(
+        doc='Attribute that uniquely identifies the resource')
 
     _last_etag = None
     _details = None
@@ -75,6 +100,13 @@ class Resource:
         if not self._details:
             raise KeyError(repr(item))
         return deepcopy(self._details[item])
+
+    @property
+    def id(self):
+        """Return the unique identifier for a resource."""
+        value = self.uri.split('/')[-1]
+        if value:
+            return unquote(value)
 
     def details(self):
         """Return details about this resource.
@@ -140,6 +172,8 @@ class NamedResource(Resource):
     Named resouces can be renamed via :func:`rename()` call.
 
     """
+
+    id_attribute = 'name'
 
     async def rename(self, name):
         """Rename an resource with the specified name.

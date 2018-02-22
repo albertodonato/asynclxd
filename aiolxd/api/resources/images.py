@@ -9,6 +9,8 @@ from ..resource import (
 class Image(Resource):
     """API resouce for images."""
 
+    id_attribute = 'fingerprint'
+
 
 class Images(ResourceCollection):
     """Images collection API methods."""

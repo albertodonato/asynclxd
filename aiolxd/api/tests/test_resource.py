@@ -19,7 +19,8 @@ from ..testing import (
 
 
 class SampleResource(Resource):
-    pass
+
+    id_attribute = 'id'
 
 
 class SampleResourceCollection(ResourceCollection):
@@ -81,6 +82,17 @@ class TestResourceCollection(LoopTestCase):
             [SampleResource(remote, '/resources/one'),
              SampleResource(remote, '/resources/two')])
 
+    async def test_recursion(self):
+        """The read method returns resources with details if recursive."""
+        remote = FakeRemote(
+            responses=[[{'id': 'one', 'value': 1}, {'id': 'two', 'value': 2}]])
+        collection = SampleResourceCollection(remote)
+        resource1, resource2 = await collection.read(recursion=True)
+        self.assertEqual(resource1.uri, '/1.0/sample-resource/one')
+        self.assertEqual(resource1.details(), {'id': 'one', 'value': 1})
+        self.assertEqual(resource2.uri, '/1.0/sample-resource/two')
+        self.assertEqual(resource2.details(), {'id': 'two', 'value': 2})
+
     async def test_read_raw(self):
         """The read method returns the raw response if raw=True."""
         remote = FakeRemote(responses=[['/resources/one', '/resources/two']])
@@ -93,6 +105,12 @@ class TestResourceCollection(LoopTestCase):
         collection = SampleResourceCollection(FakeRemote())
         resource = collection.get('a-resource')
         self.assertEqual(resource.uri, '/1.0/sample-resource/a-resource')
+
+    def test_get_quoted(self):
+        """The resource URI quotes special characters."""
+        collection = SampleResourceCollection(FakeRemote())
+        resource = collection.get('a resource')
+        self.assertEqual(resource.uri, '/1.0/sample-resource/a%20resource')
 
 
 class TestResource(LoopTestCase):
@@ -144,6 +162,21 @@ class TestResource(LoopTestCase):
         details.append('bar')
         # details in the resource are unchanged
         self.assertEqual(resource['key'], ['foo'])
+
+    def test_id(self):
+        """The id attribute returns the unique identifier of the resource."""
+        resource = SampleResource(FakeRemote(), '/resource/myresource')
+        self.assertEqual(resource.id, 'myresource')
+
+    def test_id_none(self):
+        """If the URI is empty, the ID is None."""
+        resource = SampleResource(FakeRemote(), '/')
+        self.assertIsNone(resource.id)
+
+    def test_id_with_quoted_chars(self):
+        """If the URI contains quoted chars, it's unquoted."""
+        resource = SampleResource(FakeRemote(), '/resource/my%20resource')
+        self.assertEqual(resource.id, 'my resource')
 
     def test_details_no_cached(self):
         """If no details are cached, details() resutns None."""
