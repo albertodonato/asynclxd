@@ -1,5 +1,9 @@
 """API resources."""
 
+from .certificates import (
+    Certificate,
+    Certificates,
+)
 from .containers import (
     Container,
     Containers,
@@ -14,6 +18,8 @@ from .networks import (
 )
 
 __all__ = [
+    'Certificate',
+    'Certificates',
     'Container',
     'Containers',
     'Image',
