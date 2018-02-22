@@ -149,7 +149,7 @@ class TestRemote(LoopTestCase):
             self.assertIsNone(self.remote._session.connector._ssl)
 
     async def test_api_versions(self):
-        """It's possibel to query for API versions."""
+        """It's possible to query for API versions."""
         session = FakeSession(
             responses=[make_sync_response(['/1.0', '/2.0'])])
         self.remote._session_factory = lambda connector=None: session
@@ -161,3 +161,17 @@ class TestRemote(LoopTestCase):
             [('GET', 'https://example.com:8443/', None,
               {'Accept': 'application/json'}, None)])
         self.assertEqual(response, ['1.0', '2.0'])
+
+    async def test_info(self):
+        """It's possible to query for server information."""
+        info = {'api_extensions': ['ext1', 'ext2'], 'api_version': '1.0'}
+        session = FakeSession(responses=[make_sync_response(info)])
+        self.remote._session_factory = lambda connector=None: session
+
+        async with self.remote:
+            response = await self.remote.info()
+        self.assertEqual(
+            session.calls,
+            [('GET', 'https://example.com:8443/1.0', None,
+              {'Accept': 'application/json'}, None)])
+        self.assertEqual(response, info)

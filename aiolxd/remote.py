@@ -68,8 +68,14 @@ class Remote(Loggable):
 
     async def api_versions(self):
         """Return a list of available API versions."""
+        # absolute URI so that the version is not incldued
         response = await self.request('GET', '/')
         return [version.lstrip('/') for version in response.metadata]
+
+    async def info(self):
+        """Return information about the LXD server configuration."""
+        response = await self.request('GET', '')
+        return response.metadata
 
     async def request(self, method, path, params=None, headers=None,
                       content=None):
@@ -84,7 +90,10 @@ class Remote(Loggable):
             content=content)
 
     def _full_path(self, path):
-        if not path.startswith('/'):
+        """Return the full path for a request."""
+        if not path:
+            path = '/' + self.version
+        elif not path.startswith('/'):
             path = '/{version}/{path}'.format(version=self.version, path=path)
         return self.uri.request_path(path)
 
