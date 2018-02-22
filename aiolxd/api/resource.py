@@ -1,24 +1,24 @@
-"""API entities base classes."""
+"""API resources base classes."""
 
 import abc
 
 
 class Collection:
-    """Property to wrap an EntityCollection."""
+    """Property to wrap an ResourceCollection."""
 
     def __init__(self, collection_name):
-        from . import entities
-        self.collection = getattr(entities, collection_name)
+        from . import resources
+        self.collection = getattr(resources, collection_name)
 
     def __get__(self, obj, cls=None):
         return self.collection(obj._remote)
 
 
-class EntityCollection(metaclass=abc.ABCMeta):
-    """A collection for API entities of a type."""
+class ResourceCollection(metaclass=abc.ABCMeta):
+    """A collection for API resources of a type."""
 
     uri_name = abc.abstractproperty(doc='Name of the collection in the API')
-    entity_class = abc.abstractproperty(doc='Class for returned entities')
+    resource_class = abc.abstractproperty(doc='Class for returned resources')
 
     def __init__(self, remote, raw=False):
         self._remote = remote
@@ -29,22 +29,22 @@ class EntityCollection(metaclass=abc.ABCMeta):
         return self.__class__(self._remote, raw=True)
 
     async def create(self, details):
-        """Create a new entity in the collection."""
+        """Create a new resource in the collection."""
         response = await self._remote.request(
             'POST', self._uri(), content=details)
-        return self.entity_class(self._remote, response.location)
+        return self.resource_class(self._remote, response.location)
 
     def get(self, id):
-        """Return a single entity in the collection."""
-        return self.entity_class(self._remote, self._uri(id=id))
+        """Return a single resource in the collection."""
+        return self.resource_class(self._remote, self._uri(id=id))
 
     async def read(self):
-        """Return entities for this collection."""
+        """Return resources for this collection."""
         response = await self._remote.request('GET', self._uri())
         content = response.metadata
         if self._raw:
             return content
-        return [self.entity_class(self._remote, uri) for uri in content]
+        return [self.resource_class(self._remote, uri) for uri in content]
 
     def _uri(self, id=None):
         uri = '/{version}/{uri_name}'.format(
@@ -54,8 +54,8 @@ class EntityCollection(metaclass=abc.ABCMeta):
         return uri
 
 
-class Entity:
-    """An API entity."""
+class Resource:
+    """An API resource."""
 
     _response = None
 
@@ -70,12 +70,12 @@ class Entity:
         return (self._remote, self.uri) == (other._remote, other.uri)
 
     async def read(self):
-        """Return details for this entity."""
+        """Return details for this resource."""
         self._response = await self._remote.request('GET', self.uri)
         return self._response
 
     async def update(self, details, etag=True):
-        """Update entity details.
+        """Update resource details.
 
         If `etag` is True, ETag header is set with value from last read() call,
         if available.
@@ -86,7 +86,7 @@ class Entity:
             'PATCH', self.uri, headers=headers, content=details)
 
     async def replace(self, details, etag=True):
-        """Replace entity details.
+        """Replace resource details.
 
         If `etag` is True, ETag header is set with value from last read() call,
         if available.
@@ -97,7 +97,7 @@ class Entity:
             'PUT', self.uri, headers=headers, content=details)
 
     async def delete(self):
-        """Delete this entity."""
+        """Delete this resource."""
         return await self._remote.request('DELETE', self.uri)
 
     def _get_headers(self, etag=False):
@@ -107,17 +107,18 @@ class Entity:
         return headers or None
 
 
-class NamedEntity(Entity):
-    """An entity with a name.
+class NamedResource(Resource):
+    """A resource with a name.
 
-    Named entities can be renamed via :func:`rename()` call.
+    Named resouces can be renamed via :func:`rename()` call.
 
     """
 
     async def rename(self, name):
-        """Rename an entity with the specified name.
+        """Rename an resource with the specified name.
 
-        This updates the URI of this entity to the new one.
+        This updates the URI of this resource to the new one.
+
         """
         response = await self._remote.request(
             'POST', self.uri, content={'name': name})

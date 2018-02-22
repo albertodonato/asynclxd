@@ -1,4 +1,4 @@
-"""API entities."""
+"""API resources."""
 
 from .containers import (
     Container,

@@ -1,10 +1,10 @@
 """LXD REST API."""
 
-from .entity import Collection
 from .request import (
     request,
     ResponseError,
 )
+from .resource import Collection
 
 __all__ = [
     'Collection',
