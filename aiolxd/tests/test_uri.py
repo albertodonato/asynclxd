@@ -6,7 +6,7 @@ from ..uri import (
 )
 
 
-class TestRemoteURI(TestCase):
+class RemoteURITests(TestCase):
 
     def test_uri(self):
         uri = RemoteURI('https://example.com:1234/some/path')

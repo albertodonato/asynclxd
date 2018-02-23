@@ -12,7 +12,7 @@ from ..lxc import (
 )
 
 
-class TestGetRemotes(TestCase):
+class GetRemotesTests(TestCase):
 
     def setUp(self):
         super().setUp()
@@ -109,7 +109,7 @@ class TestGetRemotes(TestCase):
         self.assertIsNotNone(certs.client_key)
 
 
-class TestCLIConfigDir(TestCase):
+class CLIConfigDirTests(TestCase):
 
     def test_cli_config_dir(self):
         """cli_config_dir returns the directory for the lxc CLI config."""

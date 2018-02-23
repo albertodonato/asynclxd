@@ -14,7 +14,7 @@ from ..remote import (
 )
 
 
-class TestRemote(LoopTestCase):
+class RemoteTests(LoopTestCase):
 
     def setUp(self):
         super().setUp()

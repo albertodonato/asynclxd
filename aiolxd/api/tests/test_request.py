@@ -15,7 +15,7 @@ from ..testing import (
 )
 
 
-class TestRequest(LoopTestCase):
+class RequestTests(LoopTestCase):
 
     def setUp(self):
         super().setUp()
@@ -79,7 +79,7 @@ class TestRequest(LoopTestCase):
             'API request failed with 400: Something went wrong')
 
 
-class TestResponse(TestCase):
+class ResponseTests(TestCase):
 
     def test_instantiate(self):
         """A Response can be instantiated."""

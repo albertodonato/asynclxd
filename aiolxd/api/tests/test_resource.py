@@ -29,7 +29,7 @@ class SampleResourceCollection(ResourceCollection):
     resource_class = SampleResource
 
 
-class TestCollection(TestCase):
+class CollectionTests(TestCase):
 
     @mock.patch('aiolxd.api.resources')
     def test_read(self, mock_resources):
@@ -55,7 +55,7 @@ class TestCollection(TestCase):
         self.assertIs(collection.remote, remote)
 
 
-class TestResourceCollection(LoopTestCase):
+class ResourceCollectionTests(LoopTestCase):
 
     def test_raw(self):
         """The raw method returns a collection with raw attribute set."""
@@ -113,7 +113,7 @@ class TestResourceCollection(LoopTestCase):
         self.assertEqual(resource.uri, '/1.0/sample-resource/a%20resource')
 
 
-class TestResource(LoopTestCase):
+class ResourceTests(LoopTestCase):
 
     def test_repr(self):
         """The object repr contains the URI."""
@@ -295,7 +295,7 @@ class TestResource(LoopTestCase):
             remote.calls, [(('DELETE', '/resource', None, None, None))])
 
 
-class TestNamedResource(LoopTestCase):
+class NamedResourceTests(LoopTestCase):
 
     async def test_rename(self):
         """A named resource can be renamed."""
