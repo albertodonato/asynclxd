@@ -84,7 +84,8 @@ class Remote(Loggable):
             raise SessionError('Not in a session')
 
         path = self._full_path(path)
-        self.logger.debug('{method} {path}'.format(method=method, path=path))
+        self.logger.debug('{method} {path}'.format(
+            method=method, path=self._full_path(path, params=params)))
         return await request(
             self._session, method, path, params=params, headers=headers,
             content=content)
