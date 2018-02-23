@@ -1,4 +1,4 @@
-"""Network-related resources for the API."""
+"""API resources for networks."""
 
 from ..resource import (
     ResourceCollection,

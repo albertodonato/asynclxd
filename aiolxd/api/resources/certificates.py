@@ -1,4 +1,4 @@
-"""Certificate-related resources for the API."""
+"""API resources For certificates."""
 
 from ..resource import (
     Resource,

@@ -1,4 +1,4 @@
-"""Container-related resources for the API."""
+"""API resources for containers."""
 
 from ..resource import (
     ResourceCollection,

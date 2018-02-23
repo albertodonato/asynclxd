@@ -1,4 +1,4 @@
-"""Image-related resources for the API."""
+"""API resources for images."""
 
 from ..resource import (
     Resource,
