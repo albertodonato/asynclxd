@@ -48,9 +48,13 @@ class RemoteURI:
             return getattr(self._uri, attr)
         raise AttributeError(attr)
 
-    def request_path(self, path):
+    def request_path(self, path, params=None):
         """Return a string suitable for a request."""
         if path.startswith('/'):
             path = path[1:]
-        loc = 'http://local/' if self.scheme == 'unix' else str(self)
-        return loc + path
+
+        url = URL('http://local') if self.scheme == 'unix' else self._uri
+        url = url.with_path(path)
+        if params:
+            url = url.with_query(params)
+        return str(url)

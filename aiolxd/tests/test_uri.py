@@ -68,3 +68,10 @@ class TestRemoteURI(TestCase):
         uri = RemoteURI('https://example.com:8443')
         self.assertEqual(
             uri.request_path('some/url'), 'https://example.com:8443/some/url')
+
+    def test_request_uri_with_params(self):
+        """If params are provided, they're used in the query string."""
+        uri = RemoteURI('https://example.com:8443')
+        self.assertEqual(
+            uri.request_path('some/url', params={'foo': 'bar', 'baz': 'x y'}),
+            'https://example.com:8443/some/url?foo=bar&baz=x+y')

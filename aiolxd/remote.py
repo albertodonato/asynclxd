@@ -89,13 +89,13 @@ class Remote(Loggable):
             self._session, method, path, params=params, headers=headers,
             content=content)
 
-    def _full_path(self, path):
+    def _full_path(self, path, params=None):
         """Return the full path for a request."""
         if not path:
             path = '/' + self.version
         elif not path.startswith('/'):
             path = '/{version}/{path}'.format(version=self.version, path=path)
-        return self.uri.request_path(path)
+        return self.uri.request_path(path, params=params)
 
     def _connector(self):
         """Return a connector for the HTTP session."""

@@ -69,7 +69,7 @@ class TestRemote(LoopTestCase):
             response = await self.remote.request('GET', '/')
         self.assertEqual(
             session.calls,
-            [('GET', 'https://example.com:8443/', None,
+            [('GET', 'https://example.com:8443', None,
               {'Accept': 'application/json'}, None)])
         self.assertEqual(response.metadata, ['response'])
 
@@ -83,7 +83,7 @@ class TestRemote(LoopTestCase):
             await self.remote.request('POST', '/', content=content)
         self.assertEqual(
             session.calls,
-            [('POST', 'https://example.com:8443/', None,
+            [('POST', 'https://example.com:8443', None,
               {'Accept': 'application/json',
                'Content-Type': 'application/json'},
               content)])
@@ -98,7 +98,7 @@ class TestRemote(LoopTestCase):
             await self.remote.request('POST', '/', params=params)
         self.assertEqual(
             session.calls,
-            [('POST', 'https://example.com:8443/', params,
+            [('POST', 'https://example.com:8443', params,
               {'Accept': 'application/json'}, None)])
 
     async def test_request_with_headers(self):
@@ -111,7 +111,7 @@ class TestRemote(LoopTestCase):
                 'POST', '/', headers={'X-Sample': 'value'})
         self.assertEqual(
             session.calls,
-            [('POST', 'https://example.com:8443/', None,
+            [('POST', 'https://example.com:8443', None,
               {'Accept': 'application/json', 'X-Sample': 'value'}, None)])
 
     async def test_request_not_in_session(self):
@@ -158,7 +158,7 @@ class TestRemote(LoopTestCase):
             response = await self.remote.api_versions()
         self.assertEqual(
             session.calls,
-            [('GET', 'https://example.com:8443/', None,
+            [('GET', 'https://example.com:8443', None,
               {'Accept': 'application/json'}, None)])
         self.assertEqual(response, ['1.0', '2.0'])
 
