@@ -12,11 +12,14 @@ class Collection:
     """Property to wrap an ResourceCollection."""
 
     def __init__(self, collection_name):
-        from . import resources
-        self.collection = getattr(resources, collection_name)
+        self.collection = self._get_collection(collection_name)
 
     def __get__(self, obj, cls=None):
         return self.collection(obj._remote)
+
+    def _get_collection(self, name):
+        from . import resources
+        return getattr(resources, name)
 
 
 class ResourceCollection(metaclass=abc.ABCMeta):

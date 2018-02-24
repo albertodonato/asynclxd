@@ -1,17 +1,17 @@
 from unittest import (
-    TestCase,
     mock,
+    TestCase,
 )
 
 from toolrack.testing.async import LoopTestCase
 
+from ..request import Response
 from ..resource import (
     Collection,
     NamedResource,
     ResourceCollection,
     Resource,
 )
-from ..request import Response
 from ..testing import (
     FakeRemote,
     make_resource,
@@ -31,8 +31,8 @@ class SampleResourceCollection(ResourceCollection):
 
 class CollectionTests(TestCase):
 
-    @mock.patch('aiolxd.api.resources')
-    def test_read(self, mock_resources):
+    @mock.patch.object(Collection, '_get_collection')
+    def test_read(self, mock_get_collection):
         """Getting a collection returns an instance for the remote."""
 
         class SampleCollection:
@@ -40,7 +40,7 @@ class CollectionTests(TestCase):
             def __init__(self, remote):
                 self.remote = remote
 
-        mock_resources.SampleCollection = SampleCollection
+        mock_get_collection.return_value = SampleCollection
 
         class SampleRemote:
 
