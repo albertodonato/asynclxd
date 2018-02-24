@@ -16,6 +16,10 @@ from .networks import (
     Network,
     Networks,
 )
+from .profiles import (
+    Profile,
+    Profiles,
+)
 
 __all__ = [
     'Certificate',
@@ -26,4 +30,6 @@ __all__ = [
     'Images',
     'Network',
     'Networks',
+    'Profile',
+    'Profiles',
 ]

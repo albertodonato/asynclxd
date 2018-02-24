@@ -33,6 +33,7 @@ class Remote(Loggable):
     containers = Collection('Containers')
     images = Collection('Images')
     networks = Collection('Networks')
+    profiles = Collection('Profiles')
 
     _session_factory = ClientSession  # for testing
     _session = None
