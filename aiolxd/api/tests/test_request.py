@@ -1,6 +1,8 @@
-from unittest import TestCase
+from pathlib import Path
 from textwrap import dedent
+from unittest import TestCase
 
+from toolrack.testing import TempDirFixture
 from toolrack.testing.async import LoopTestCase
 
 from ..request import (
@@ -19,10 +21,11 @@ class RequestTests(LoopTestCase):
 
     def setUp(self):
         super().setUp()
+        self.tempdir = self.useFixture(TempDirFixture())
         self.session = FakeSession()
 
     async def test_request(self):
-        """The request method makes an HTTP request and returns a Response."""
+        """The request call makes an HTTP request and returns a Response."""
         response = make_sync_response(metadata=['/1.0'])
         self.session.responses.append(response)
         resp = await request(self.session, 'GET', '/')
@@ -30,10 +33,10 @@ class RequestTests(LoopTestCase):
         self.assertEqual(resp.metadata, ['/1.0'])
         self.assertEqual(
             self.session.calls,
-            [('GET', '/', None, {'Accept': 'application/json'}, None)])
+            [('GET', '/', None, {}, None)])
 
     async def test_request_with_content(self):
-        """The request method can include content in the request."""
+        """The request call can include content in the request."""
         response = make_sync_response(metadata=['response'])
         self.session.responses.append(response)
         content = {'some': 'content'}
@@ -41,33 +44,56 @@ class RequestTests(LoopTestCase):
         self.assertEqual(
             self.session.calls,
             [('POST', '/', None,
-              {'Accept': 'application/json',
-               'Content-Type': 'application/json'},
+              {'Content-Type': 'application/json'},
               content)])
 
+    async def test_request_with_upload_path(self):
+        """The request call can include content from a file."""
+        upload_file = Path(self.tempdir.mkfile(content='data'))
+        response = make_sync_response(metadata=['response'])
+        self.session.responses.append(response)
+        await request(self.session, 'POST', '/', upload=upload_file)
+        self.assertEqual(
+            self.session.calls,
+            [('POST', '/', None,
+              {'Content-Type': 'application/octet-stream'}, 'data')])
+
+    async def test_request_with_upload_file_descriptor(self):
+        """The request call can include content from a file descriptor."""
+        upload_file = Path(self.tempdir.mkfile(content='data'))
+        response = make_sync_response(metadata=['response'])
+        self.session.responses.append(response)
+        upload = upload_file.open()
+        await request(self.session, 'POST', '/', upload=upload)
+        self.assertEqual(
+            self.session.calls,
+            [('POST', '/', None,
+              {'Content-Type': 'application/octet-stream'}, 'data')])
+        # the passed file descriptor is closed
+        self.assertTrue(upload.closed)
+
     async def test_request_with_params(self):
-        """The request method can include params in the request."""
+        """The request call can include params in the request."""
         response = make_sync_response(metadata=['response'])
         self.session.responses.append(response)
         params = {'a': 'param'}
         await request(self.session, 'POST', '/', params=params)
         self.assertEqual(
             self.session.calls,
-            [('POST', '/', params, {'Accept': 'application/json'}, None)])
+            [('POST', '/', params, {}, None)])
 
     async def test_request_with_headers(self):
-        """The request method can include extra headers in the request."""
+        """The request call can include extra headers in the request."""
         response = make_sync_response(metadata=['response'])
         self.session.responses.append(response)
         headers = {'X-Sample': 'value'}
         await request(self.session, 'POST', '/', headers=headers)
         self.assertEqual(
             self.session.calls,
-            [('POST', '/', None,
-              {'Accept': 'application/json', 'X-Sample': 'value'}, None)])
+            [('POST', '/', None, {'X-Sample': 'value'}, None)])
 
     async def test_request_error(self):
-        """The request method raises an error on failed requests."""
+        """The request call raises an error on failed requests."""
         response = make_error_response(error='Something went wrong')
         self.session.responses.append(response)
         with self.assertRaises(ResponseError) as cm:

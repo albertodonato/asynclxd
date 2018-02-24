@@ -13,8 +13,8 @@ class FakeRemote:
         self.calls = []
 
     async def request(self, method, path, params=None, headers=None,
-                      content=None):
-        self.calls.append((method, path, params, headers, content))
+                      content=None, upload=None):
+        self.calls.append((method, path, params, headers, content, upload))
         response = self.responses.pop(0)
         if isinstance(response, Response):
             return response
@@ -30,8 +30,11 @@ class FakeSession:
         self.calls = []
 
     async def request(self, method, path, params=None, headers=None,
-                      json=None):
-        self.calls.append((method, path, params, headers, json))
+                      json=None, data=None):
+        content = json
+        if data:
+            content = data.read()
+        self.calls.append((method, path, params, headers, content))
         return FakeHTTPResponse(self.responses.pop(0))
 
     async def close(self):

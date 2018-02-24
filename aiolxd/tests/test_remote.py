@@ -1,7 +1,10 @@
+from pathlib import Path
+
 from aiohttp import (
     TCPConnector,
     UnixConnector,
 )
+from toolrack.testing import TempDirFixture
 from toolrack.testing.async import LoopTestCase
 
 from ..api.testing import (
@@ -18,6 +21,7 @@ class RemoteTests(LoopTestCase):
 
     def setUp(self):
         super().setUp()
+        self.tempdir = self.useFixture(TempDirFixture())
         self.remote = Remote('https://example.com:8443')
 
     def test_repr(self):
@@ -69,8 +73,7 @@ class RemoteTests(LoopTestCase):
             response = await self.remote.request('GET', '/')
         self.assertEqual(
             session.calls,
-            [('GET', 'https://example.com:8443', None,
-              {'Accept': 'application/json'}, None)])
+            [('GET', 'https://example.com:8443', None, {}, None)])
         self.assertEqual(response.metadata, ['response'])
 
     async def test_request_with_content(self):
@@ -84,9 +87,7 @@ class RemoteTests(LoopTestCase):
         self.assertEqual(
             session.calls,
             [('POST', 'https://example.com:8443', None,
-              {'Accept': 'application/json',
-               'Content-Type': 'application/json'},
-              content)])
+              {'Content-Type': 'application/json'}, content)])
 
     async def test_request_with_params(self):
         """Requests can include params."""
@@ -98,8 +99,20 @@ class RemoteTests(LoopTestCase):
             await self.remote.request('POST', '/', params=params)
         self.assertEqual(
             session.calls,
-            [('POST', 'https://example.com:8443', params,
-              {'Accept': 'application/json'}, None)])
+            [('POST', 'https://example.com:8443', params, {}, None)])
+
+    async def test_remote_with_upload(self):
+        """Request can include a file to upload."""
+        upload_file = Path(self.tempdir.mkfile(content='data'))
+        session = FakeSession(responses=[make_sync_response(['response'])])
+        self.remote._session_factory = lambda connector=None: session
+
+        async with self.remote:
+            await self.remote.request('POST', '/', upload=upload_file)
+        self.assertEqual(
+            session.calls,
+            [('POST', 'https://example.com:8443', None,
+              {'Content-Type': 'application/octet-stream'}, 'data')])
 
     async def test_request_with_headers(self):
         """Requests can include content."""
@@ -112,7 +125,7 @@ class RemoteTests(LoopTestCase):
         self.assertEqual(
             session.calls,
             [('POST', 'https://example.com:8443', None,
-              {'Accept': 'application/json', 'X-Sample': 'value'}, None)])
+              {'X-Sample': 'value'}, None)])
 
     async def test_request_not_in_session(self):
         """A SessionError is raised if request is not called in a session."""
@@ -130,7 +143,7 @@ class RemoteTests(LoopTestCase):
         self.assertEqual(
             session.calls,
             [('GET', 'https://example.com:8443/1.0/relative-path', None,
-              {'Accept': 'application/json'}, None)])
+              {}, None)])
 
     async def test_connector_unix(self):
         """If the URI is for a UNIX socket, a UnixConnector is used."""
@@ -158,8 +171,7 @@ class RemoteTests(LoopTestCase):
             response = await self.remote.api_versions()
         self.assertEqual(
             session.calls,
-            [('GET', 'https://example.com:8443', None,
-              {'Accept': 'application/json'}, None)])
+            [('GET', 'https://example.com:8443', None, {}, None)])
         self.assertEqual(response, ['1.0', '2.0'])
 
     async def test_info(self):
@@ -172,6 +184,5 @@ class RemoteTests(LoopTestCase):
             response = await self.remote.info()
         self.assertEqual(
             session.calls,
-            [('GET', 'https://example.com:8443/1.0', None,
-              {'Accept': 'application/json'}, None)])
+            [('GET', 'https://example.com:8443/1.0', None, {}, None)])
         self.assertEqual(response, info)

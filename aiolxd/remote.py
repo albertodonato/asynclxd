@@ -78,8 +78,18 @@ class Remote(Loggable):
         return response.metadata
 
     async def request(self, method, path, params=None, headers=None,
-                      content=None):
-        """Perform an API request within the session."""
+                      content=None, upload=None):
+        """Perform an API request within the session.
+
+        Parameters:
+          - method: the HTTP method
+          - path: the request path
+          - params: dict with query string parameters
+          - headers: additional request headers
+          - content: JSON-serializable object for the request content.
+          - upload: a :class:`pathlib.Path` or file descriptor for file upload
+
+        """
         if not self._session:
             raise SessionError('Not in a session')
 
@@ -88,7 +98,7 @@ class Remote(Loggable):
             method=method, path=self._full_path(path, params=params)))
         return await request(
             self._session, method, path, params=params, headers=headers,
-            content=content)
+            content=content, upload=upload)
 
     def _full_path(self, path, params=None):
         """Return the full path for a request."""

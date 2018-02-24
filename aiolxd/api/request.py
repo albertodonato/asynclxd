@@ -1,5 +1,7 @@
 """Perform requests to the API."""
 
+import os
+from pathlib import Path
 from pprint import pformat
 
 
@@ -36,15 +38,32 @@ class ResponseError(Exception):
 
 
 async def request(session, method, path, params=None, headers=None,
-                  content=None):
-    """Perform an API request with the session."""
+                  content=None, upload=None):
+    """Perform an API request with a session
+
+    Parameters:
+      - session: the :class:`aiohttp.Session` to perform the request
+      - method: the HTTP method
+      - path: the request path
+      - params: dict with query string parameters
+      - headers: additional request headers
+      - content: JSON-serializable object for the request content.
+      - upload: a :class:`pathlib.Path` or file descriptor for file upload
+
+    """
     if not headers:
         headers = {}
-    headers['Accept'] = 'application/json'
     if content:
         headers['Content-Type'] = 'application/json'
+    if upload:
+        headers['Content-Type'] = 'application/octet-stream'
+        if isinstance(upload, os.PathLike):
+            upload = Path(upload).open()
     response = await session.request(
-        method, path, params=params, headers=headers, json=content)
+        method, path, params=params, headers=headers, json=content,
+        data=upload)
+    if upload:
+        upload.close()
     content = await response.json()
     error_code = content.get('error_code')
     if error_code:

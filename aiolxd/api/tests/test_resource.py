@@ -205,7 +205,7 @@ class ResourceTests(LoopTestCase):
         self.assertEqual(response.http_code, 200)
         self.assertEqual(response.metadata, 'some text')
         self.assertEqual(
-            remote.calls, [(('GET', '/resource', None, None, None))])
+            remote.calls, [(('GET', '/resource', None, None, None, None))])
 
     async def test_read_caches_response_details(self):
         """The read method caches response details."""
@@ -224,7 +224,8 @@ class ResourceTests(LoopTestCase):
         self.assertEqual(response.http_code, 200)
         self.assertEqual(response.metadata, 'some text')
         self.assertEqual(
-            remote.calls, [(('PATCH', '/resource', None, None, content))])
+            remote.calls,
+            [(('PATCH', '/resource', None, None, content, None))])
 
     async def test_update_with_etag(self):
         """The update method includes the ETag if cached."""
@@ -236,7 +237,7 @@ class ResourceTests(LoopTestCase):
         await resource.update(content)
         self.assertEqual(
             remote.calls,
-            [(('PATCH', '/resource', None, {'ETag': 'abcde'}, content))])
+            [(('PATCH', '/resource', None, {'ETag': 'abcde'}, content, None))])
 
     async def test_update_with_etag_false(self):
         """The update method  doesn't use the ETag if not requested."""
@@ -248,7 +249,7 @@ class ResourceTests(LoopTestCase):
         await resource.update(content, etag=False)
         self.assertEqual(
             remote.calls,
-            [(('PATCH', '/resource', None, None, content))])
+            [(('PATCH', '/resource', None, None, content, None))])
 
     async def test_replace(self):
         """The replace method makes a PUT request for the resource."""
@@ -259,7 +260,8 @@ class ResourceTests(LoopTestCase):
         self.assertEqual(response.http_code, 200)
         self.assertEqual(response.metadata, 'some text')
         self.assertEqual(
-            remote.calls, [(('PUT', '/resource', None, None, content))])
+            remote.calls,
+            [(('PUT', '/resource', None, None, content, None))])
 
     async def test_replace_with_etag(self):
         """The replace method includes the ETag if cached."""
@@ -271,7 +273,7 @@ class ResourceTests(LoopTestCase):
         await resource.replace(content)
         self.assertEqual(
             remote.calls,
-            [(('PUT', '/resource', None, {'ETag': 'abcde'}, content))])
+            [(('PUT', '/resource', None, {'ETag': 'abcde'}, content, None))])
 
     async def test_replace_with_etag_false(self):
         """The replace method doesn't include the ETag if not requested."""
@@ -282,7 +284,7 @@ class ResourceTests(LoopTestCase):
         content = {'key': 'value'}
         await resource.replace(content, etag=False)
         self.assertEqual(
-            remote.calls, [(('PUT', '/resource', None, None, content))])
+            remote.calls, [(('PUT', '/resource', None, None, content, None))])
 
     async def test_delete(self):
         """The delete method makes a DELETE request for the resource."""
@@ -292,7 +294,7 @@ class ResourceTests(LoopTestCase):
         self.assertEqual(response.http_code, 200)
         self.assertEqual(response.metadata, {})
         self.assertEqual(
-            remote.calls, [(('DELETE', '/resource', None, None, None))])
+            remote.calls, [(('DELETE', '/resource', None, None, None, None))])
 
 
 class NamedResourceTests(LoopTestCase):
@@ -308,7 +310,8 @@ class NamedResourceTests(LoopTestCase):
         self.assertEqual(response.metadata, {})
         self.assertEqual(
             remote.calls,
-            [(('POST', '/resource', None, None, {'name': 'new-resource'}))])
+            [(('POST', '/resource', None, None,
+               {'name': 'new-resource'}, None))])
         self.assertEqual(resource.uri, '/new-resource')
         # cached details are cleared
         self.assertEqual(resource._details, {})
