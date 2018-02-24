@@ -237,7 +237,8 @@ class ResourceTests(LoopTestCase):
         await resource.update(content)
         self.assertEqual(
             remote.calls,
-            [(('PATCH', '/resource', None, {'ETag': 'abcde'}, content, None))])
+            [(('PATCH', '/resource', None, {'If-Match': 'abcde'},
+               content, None))])
 
     async def test_update_with_etag_false(self):
         """The update method  doesn't use the ETag if not requested."""
@@ -273,7 +274,8 @@ class ResourceTests(LoopTestCase):
         await resource.replace(content)
         self.assertEqual(
             remote.calls,
-            [(('PUT', '/resource', None, {'ETag': 'abcde'}, content, None))])
+            [(('PUT', '/resource', None, {'If-Match': 'abcde'},
+               content, None))])
 
     async def test_replace_with_etag_false(self):
         """The replace method doesn't include the ETag if not requested."""

@@ -160,7 +160,7 @@ class Resource(metaclass=abc.ABCMeta):
         """Return headers for a request."""
         headers = {}
         if etag and self._last_etag:
-            headers['ETag'] = self._last_etag
+            headers['If-Match'] = self._last_etag
         return headers or None
 
     def _update_cache(self, response):
