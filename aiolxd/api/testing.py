@@ -53,10 +53,10 @@ class FakeHTTPResponse:
         return self.content
 
 
-def make_resource(resource_class, etag=None, details=None):
+def make_resource(resource_class, uri='/resource', etag=None, details=None):
     """Return a resource instance with specified details."""
-    resource = resource_class(FakeRemote(), '/resource')
-    resource._etag = etag
+    resource = resource_class(FakeRemote(), uri)
+    resource._last_etag = etag
     resource._details = details
     return resource
 

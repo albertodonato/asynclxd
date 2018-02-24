@@ -85,8 +85,14 @@ class ResourceCollection(metaclass=abc.ABCMeta):
 class Resource(metaclass=abc.ABCMeta):
     """An API resource."""
 
+    #: Name of the attribute that uniquely identifies this resource
     id_attribute = abc.abstractproperty(
         doc='Attribute that uniquely identifies the resource')
+
+    #: If defined, a sequence of 2-tuples with a tuple of strings identifying a
+    # key in resource details and a resource class. Values for the keys are
+    # returned as instances of the resource class.
+    related_resources = None
 
     _last_etag = None
     _details = None
@@ -106,6 +112,12 @@ class Resource(metaclass=abc.ABCMeta):
         if not self._details:
             raise KeyError(repr(item))
         return deepcopy(self._details[item])
+
+    def __deepcopy__(self, memo):
+        copy = self.__class__(self._remote, self.uri)
+        copy._last_etag = self._last_etag
+        copy._details = deepcopy(self._details, memo)
+        return copy
 
     @property
     def id(self):
@@ -130,6 +142,7 @@ class Resource(metaclass=abc.ABCMeta):
     async def read(self):
         """Return details for this resource."""
         response = await self._remote.request('GET', self.uri)
+        self._set_related_resources(response)
         self._update_cache(response)
         return response
 
@@ -170,6 +183,24 @@ class Resource(metaclass=abc.ABCMeta):
         """Update cached information from response."""
         self._last_etag = response.etag
         self._details = response.metadata
+
+    def _set_related_resources(self, response):
+        """Convert related resoruces URIs to resource instances."""
+        if not self.related_resources:
+            return
+
+        for keys, resource_class in self.related_resources:
+            entry = response.metadata
+            # find the attriute in the response
+            for key in keys:
+                entry = entry.get(key)
+                if not entry:
+                    continue
+            if not entry:
+                continue
+            # replace with resource instances
+            for i, resource_uri in enumerate(entry):
+                entry[i] = resource_class(self._remote, resource_uri)
 
 
 class NamedResource(Resource):

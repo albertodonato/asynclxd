@@ -1,5 +1,6 @@
 """API resources for profiles."""
 
+from .containers import Container
 from ..resource import (
     ResourceCollection,
     NamedResource,
@@ -8,6 +9,10 @@ from ..resource import (
 
 class Profile(NamedResource):
     """API resource for profiles."""
+
+    related_resources = frozenset([
+        (('used_by',), Container),
+    ])
 
 
 class Profiles(ResourceCollection):

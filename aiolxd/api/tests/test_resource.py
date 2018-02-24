@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest import TestCase
 
 from toolrack.testing.async import LoopTestCase
@@ -18,6 +19,13 @@ from ..testing import (
 class SampleResource(Resource):
 
     id_attribute = 'id'
+
+
+class SampleResourceWithRelated(SampleResource):
+
+    related_resources = frozenset([
+        (('foo', 'sample'), SampleResource)
+    ])
 
 
 class SampleResourceCollection(ResourceCollection):
@@ -160,6 +168,18 @@ class ResourceTests(LoopTestCase):
         # details in the resource are unchanged
         self.assertEqual(resource['key'], ['foo'])
 
+    def test_deepcopy(self):
+        """deepcopy returns a copy of the object."""
+        resource = make_resource(
+            SampleResource, uri='/res', etag='abcde',
+            details={'some': 'detail'})
+        copy = deepcopy(resource)
+        self.assertEqual(copy.uri, '/res')
+        self.assertEqual(copy._last_etag, 'abcde')
+        self.assertEqual(copy._details, {'some': 'detail'})
+        # details are different objects
+        self.assertIsNot(copy._details, resource._details)
+
     def test_id(self):
         """The id attribute returns the unique identifier of the resource."""
         resource = SampleResource(FakeRemote(), '/resource/myresource')
@@ -211,6 +231,30 @@ class ResourceTests(LoopTestCase):
         self.assertIsNone(resource._details)
         response = await resource.read()
         self.assertEqual(resource._details, response.metadata)
+
+    async def test_read_related_resources(self):
+        """Related resources are expanded."""
+        details = {
+            'id': 'res',
+            'foo': {
+                'bar': 'baz',
+                'sample': ['/resource/one', '/resource/two']}}
+        remote = FakeRemote(responses=[details])
+        resource = SampleResourceWithRelated(remote, '/resource-with-related')
+        await resource.read()
+        related1, related2 = resource['foo']['sample']
+        self.assertIsInstance(related1, SampleResource)
+        self.assertEqual(related1.uri, '/resource/one')
+        self.assertIsInstance(related2, SampleResource)
+        self.assertEqual(related2.uri, '/resource/two')
+
+    async def test_read_related_resources_not_found(self):
+        """If attribute for related resources is not found, it's ignored."""
+        details = {'id': 'res', 'foo': {'bar': 'baz'}}
+        remote = FakeRemote(responses=[details])
+        resource = SampleResourceWithRelated(remote, '/resource-with-related')
+        await resource.read()
+        self.assertEqual(resource.details(), details)
 
     async def test_update(self):
         """The update method makes a PATCH request for the resource."""
