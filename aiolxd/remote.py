@@ -13,6 +13,7 @@ from toolrack.log import Loggable
 from .api import (
     Collection,
     request,
+    resources,
 )
 from .uri import RemoteURI
 
@@ -29,11 +30,11 @@ class Remote(Loggable):
     """LXD server remote."""
 
     # collection accessors
-    certificates = Collection('Certificates')
-    containers = Collection('Containers')
-    images = Collection('Images')
-    networks = Collection('Networks')
-    profiles = Collection('Profiles')
+    certificates = Collection(resources.Certificates)
+    containers = Collection(resources.Containers)
+    images = Collection(resources.Images)
+    networks = Collection(resources.Networks)
+    profiles = Collection(resources.Profiles)
 
     _session_factory = ClientSession  # for testing
     _session = None

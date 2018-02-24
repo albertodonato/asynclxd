@@ -11,15 +11,11 @@ from urllib.parse import (
 class Collection:
     """Property to wrap an ResourceCollection."""
 
-    def __init__(self, collection_name):
-        self.collection = self._get_collection(collection_name)
+    def __init__(self, resource_collection):
+        self.resource_collection = resource_collection
 
     def __get__(self, obj, cls=None):
-        return self.collection(obj._remote)
-
-    def _get_collection(self, name):
-        from . import resources
-        return getattr(resources, name)
+        return self.resource_collection(obj._remote)
 
 
 class ResourceCollection(metaclass=abc.ABCMeta):

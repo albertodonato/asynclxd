@@ -1,7 +1,4 @@
-from unittest import (
-    mock,
-    TestCase,
-)
+from unittest import TestCase
 
 from toolrack.testing.async import LoopTestCase
 
@@ -31,8 +28,7 @@ class SampleResourceCollection(ResourceCollection):
 
 class CollectionTests(TestCase):
 
-    @mock.patch.object(Collection, '_get_collection')
-    def test_read(self, mock_get_collection):
+    def test_read(self):
         """Getting a collection returns an instance for the remote."""
 
         class SampleCollection:
@@ -40,11 +36,9 @@ class CollectionTests(TestCase):
             def __init__(self, remote):
                 self.remote = remote
 
-        mock_get_collection.return_value = SampleCollection
-
         class SampleRemote:
 
-            collection = Collection('SampleCollection')
+            collection = Collection(SampleCollection)
 
             def __init__(self):
                 self._remote = self
