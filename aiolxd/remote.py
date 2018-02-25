@@ -50,7 +50,8 @@ class Remote(Loggable):
         self._remote = self
 
     def __repr__(self):
-        return '{cls}({uri})'.format(cls=self.__class__.__name__, uri=self.uri)
+        return '{cls}({uri!r})'.format(
+            cls=self.__class__.__name__, uri=self.uri)
 
     async def __aenter__(self):
         self.open()

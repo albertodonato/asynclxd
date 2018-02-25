@@ -27,7 +27,7 @@ class RemoteTests(LoopTestCase):
     def test_repr(self):
         """The object repr includes the URI."""
         self.assertEqual(
-            repr(self.remote), 'Remote(https://example.com:8443/)')
+            repr(self.remote), "Remote('https://example.com:8443/')")
 
     async def test_context_manager(self):
         """A session is created when using the class as context manager."""

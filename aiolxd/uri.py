@@ -43,6 +43,9 @@ class RemoteURI:
         loc = 'unix://' if self._uri.scheme == 'unix' else str(self._uri)
         return loc + self._uri.path
 
+    def __repr__(self):
+        return repr(str(self))
+
     def __getattr__(self, attr):
         if attr in ('scheme', 'host', 'port', 'path'):
             return getattr(self._uri, attr)

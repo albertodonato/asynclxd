@@ -115,7 +115,7 @@ class ResourceTests(LoopTestCase):
     def test_repr(self):
         """The object repr contains the URI."""
         resource = SampleResource(FakeRemote(), '/resource')
-        self.assertEqual(repr(resource), 'SampleResource(/resource)')
+        self.assertEqual(repr(resource), "SampleResource('/resource')")
 
     def test_eq(self):
         """Two resources are equal if they have the same remote and URI."""

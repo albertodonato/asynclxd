@@ -46,6 +46,11 @@ class RemoteURITests(TestCase):
         uri = RemoteURI('https://example.com:8443')
         self.assertEqual(str(uri), 'https://example.com:8443/')
 
+    def test_repr(self):
+        """A RemoteURI can be repr'd."""
+        uri = RemoteURI('https://example.com:8443')
+        self.assertEqual(repr(uri), "'https://example.com:8443/'")
+
     def test_getattr_invalid_attr(self):
         """Accessing an invalid attribute raises an AttributeError."""
         uri = RemoteURI('https://example.com:8443')

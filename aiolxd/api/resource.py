@@ -96,7 +96,8 @@ class Resource(metaclass=abc.ABCMeta):
         self.uri = uri
 
     def __repr__(self):
-        return '{cls}({uri})'.format(cls=self.__class__.__name__, uri=self.uri)
+        return '{cls}({uri!r})'.format(
+            cls=self.__class__.__name__, uri=self.uri)
 
     def __eq__(self, other):
         return (self._remote, self.uri) == (other._remote, other.uri)
