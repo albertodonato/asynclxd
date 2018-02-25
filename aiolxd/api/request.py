@@ -6,7 +6,14 @@ from pprint import pformat
 
 
 class Response:
-    """An API response."""
+    """An API response.
+
+    :param int http_code: the HTTP response code.
+    :param str etag: if included in the response, the Etag header.
+    :param str location: if included in the response, the Location header.
+    :param content: the JSON-decoded response content.
+
+    """
 
     def __init__(self, http_code, http_headers, content):
         self.http_code = http_code
@@ -16,7 +23,11 @@ class Response:
         self.metadata = content.get('metadata', {})
 
     def pprint(self):
-        """Pretty-print the response."""
+        """Pretty-print the response.
+
+        Return a nicely formatted string with response data for debugging.
+
+        """
         data = {
             'http-code': self.http_code,
             'etag': self.etag,
@@ -27,7 +38,12 @@ class Response:
 
 
 class ResponseError(Exception):
-    """An API response error."""
+    """An API response error.
+
+    :param int code: the response error code.
+    :param str message: the response error message.
+
+    """
 
     def __init__(self, code, message):
         self.code = code
@@ -39,16 +55,19 @@ class ResponseError(Exception):
 
 async def request(session, method, path, params=None, headers=None,
                   content=None, upload=None):
-    """Perform an API request with a session
+    """Perform an API request with a session.
 
-    Parameters:
-      - session: the :class:`aiohttp.Session` to perform the request
-      - method: the HTTP method
-      - path: the request path
-      - params: dict with query string parameters
-      - headers: additional request headers
-      - content: JSON-serializable object for the request content.
-      - upload: a :class:`pathlib.Path` or file descriptor for file upload
+    The Content-Type of the request is set based on whether :data:`content` or
+    :data:`upload` are provided.
+
+    :param aiohttp.Session session: the session to perform the request.
+    :param str method: the HTTP method.
+    :param str path: the request path.
+    :param dict params: optional query string parameters.
+    :param dict headers: additional request headers.
+    :param content: JSON-serializable object for the request content.
+    :param upload: a :class:`pathlib.Path` or open file descriptor for file
+        upload.
 
     """
     if not headers:

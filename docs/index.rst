@@ -9,6 +9,7 @@
    mod-lxc.rst
    mod-remote.rst
    mod-uri.rst
+   mod-api.request.rst
 
 .. include:: ../README.rst
 

@@ -124,7 +124,9 @@ class Remote(Loggable):
         """Perform an API request within the session.
 
         :param str method: the HTTP method.
-        :param str path: the request path.
+        :param str path: the request path. If the path doesn't begin with a
+            slash, it's prepended with the API version the remote is
+            configured with.
         :param dict params: optional query string parameters.
         :param dict headers: additional request headers.
         :param content: JSON-serializable object for the request content.
