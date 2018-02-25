@@ -1,4 +1,4 @@
-"""Helpers to access configuration for the LXD CLI (lxc)."""
+"""Helpers to access configuration for the LXD CLI (:data:`lxc`)."""
 
 from pathlib import Path
 
@@ -12,7 +12,17 @@ from .remote import (
 
 
 def get_remotes(config_dir=None):
-    """Return a list of :class:`Remote`s from the lxc config."""
+    """Return :class:`Remote` instances from the :data:`lxc` config.
+
+    Return a dict mapping remote names to :class:`aiolxd.remote.Remote`
+    instances.
+
+    Only remotes of :data:`"lxd"` protocol are included.
+
+    :param pathlib.Path config_dir: path for the :data:`lxc` configuration file
+        to use. If not specified, the default path is used.
+
+    """
     if config_dir is None:
         config_dir = cli_config_dir()
     config_file = Path(config_dir) / 'config.yml'
@@ -29,7 +39,7 @@ def get_remotes(config_dir=None):
 
 
 def cli_config_dir():
-    """Return the configuration directory for the 'lxc' CLI."""
+    """Return the configuration directory for the :data:`lxc` CLI."""
     return Path(xdg_config_home) / 'lxc'
 
 

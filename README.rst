@@ -1,5 +1,6 @@
-aioLXD - An asynchronous client for the LXD API
-================
+============================================
+aioLXD - Asynchronous client for the LXD API
+============================================
 
 |Latest Version| |Build Status| |Coverage Status| |Documentation Status|
 

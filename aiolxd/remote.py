@@ -18,7 +18,7 @@ from .api import (
 from .uri import RemoteURI
 
 
-# Certificates for SSL connection
+#: Certificates for SSL connection.
 SSLCerts = namedtuple('SSLCerts', ['server_cert', 'client_cert', 'client_key'])
 
 
