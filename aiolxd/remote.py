@@ -29,11 +29,15 @@ class SessionError(Exception):
 class Remote(Loggable):
     """LXD server remote."""
 
-    # collection accessors
+    #: Collection for accessing certificates
     certificates = Collection(resources.Certificates)
+    #: Collection for accessing containers
     containers = Collection(resources.Containers)
+    #: Collection for accessing images
     images = Collection(resources.Images)
+    #: Collection for accessing networks
     networks = Collection(resources.Networks)
+    #: Collection for accessing profiles
     profiles = Collection(resources.Profiles)
 
     _session_factory = ClientSession  # for testing
@@ -70,12 +74,12 @@ class Remote(Loggable):
 
     async def api_versions(self):
         """Return a list of available API versions."""
-        # absolute URI so that the version is not incldued
+        # use absolute URI so that the version is not included
         response = await self.request('GET', '/')
         return [version.lstrip('/') for version in response.metadata]
 
     async def info(self):
-        """Return information about the LXD server configuration."""
+        """Return a dict with information about the server configuration."""
         response = await self.request('GET', '')
         return response.metadata
 
