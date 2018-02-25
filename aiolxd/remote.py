@@ -1,4 +1,18 @@
-"""A LXD remote."""
+"""The :class:`Remote` class represents a LXD server.
+
+API commands with the server must be run within a session, either by calling
+:func:`Remote.open()` (and terminating it with :func:`Remote.close()`) or by
+calling the remote as a context manager:
+
+.. code:: python
+
+   async with Remote('unix://') as remote:
+       resp = await remote.request(...)
+
+The class provides a method to perform raw HTTP requests as well as properties
+to access resources exposed by the API.
+
+"""
 
 from collections import namedtuple
 import ssl
@@ -27,17 +41,38 @@ class SessionError(Exception):
 
 
 class Remote(Loggable):
-    """LXD server remote."""
+    """A LXD server remote.
 
-    #: Collection for accessing certificates
+    Typical usage of this class includes accessing resources via the provided
+    collection properties:
+
+    - :data:`certificates`
+    - :data:`containers`
+    - :data:`images`
+    - :data:`networks`
+    - :data:`profiles`
+
+    Those allow creating new resources or fetching existing ones to interact
+    with them.
+
+    The :class:`Remote` class supports the context manager protocol since
+    requests need to be performed within a connection session.
+
+    :param RemoteURI uri: the server URI.
+    :param SSLCerts certs: Certificates for HTTPS connections.
+    :param str version: the API version to use.
+
+    """
+
+    #: Collection property for accessing certificates.
     certificates = Collection(resources.Certificates)
-    #: Collection for accessing containers
+    #: Collection property for accessing containers.
     containers = Collection(resources.Containers)
-    #: Collection for accessing images
+    #: Collection property for accessing images.
     images = Collection(resources.Images)
-    #: Collection for accessing networks
+    #: Collection property for accessing networks.
     networks = Collection(resources.Networks)
-    #: Collection for accessing profiles
+    #: Collection property for accessing profiles.
     profiles = Collection(resources.Profiles)
 
     _session_factory = ClientSession  # for testing
@@ -88,13 +123,13 @@ class Remote(Loggable):
                       content=None, upload=None):
         """Perform an API request within the session.
 
-        Parameters:
-          - method: the HTTP method
-          - path: the request path
-          - params: dict with query string parameters
-          - headers: additional request headers
-          - content: JSON-serializable object for the request content.
-          - upload: a :class:`pathlib.Path` or file descriptor for file upload
+        :param str method: the HTTP method.
+        :param str path: the request path.
+        :param dict params: optional query string parameters.
+        :param dict headers: additional request headers.
+        :param content: JSON-serializable object for the request content.
+        :param upload: a :class:`pathlib.Path` or open file descriptor for
+            file upload.
 
         """
         if not self._session:

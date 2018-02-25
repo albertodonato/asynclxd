@@ -18,7 +18,6 @@ config = {
     'maintainer': 'Alberto Donato',
     'maintainer_email': 'alberto.donato@gmail.com',
     'url': 'https://github.com/albertodonato/aiolxd',
-    'download_url': 'None',
     'packages': find_packages(),
     'include_package_data': True,
     'entry_points': {'console_scripts': []},

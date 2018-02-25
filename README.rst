@@ -24,7 +24,7 @@ For example:
 
     from aiolxd import lxc
 
-    # get all remotes defined defined in the client config
+    # get all remotes defined in the client config
     remotes = lxc.get_remotes()
     async with remotes['local'] as remote:
         # fetch all images and print their details
