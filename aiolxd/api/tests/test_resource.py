@@ -94,16 +94,19 @@ class ResourceCollectionTests(LoopTestCase):
         self.assertEqual(
             await collection.read(), ['/resources/one', '/resources/two'])
 
-    def test_get(self):
-        """The get method returns a single resource."""
-        collection = SampleResourceCollection(FakeRemote())
-        resource = collection.get('a-resource')
+    async def test_get(self):
+        """The get method returns a single resource, reading its details."""
+        remote = FakeRemote(responses=[{'some': 'details'}])
+        collection = SampleResourceCollection(remote)
+        resource = await collection.get('a-resource')
         self.assertEqual(resource.uri, '/1.0/sample-resource/a-resource')
+        self.assertEqual(resource.details(), {'some': 'details'})
 
-    def test_get_quoted(self):
-        """The resource URI quotes special characters."""
-        collection = SampleResourceCollection(FakeRemote())
-        resource = collection.get('a resource')
+    async def test_get_quoted_uri(self):
+        """The get method quotes quotes special chars in the resource URI."""
+        remote = FakeRemote(responses=[{'some': 'details'}])
+        collection = SampleResourceCollection(remote)
+        resource = await collection.get('a resource')
         self.assertEqual(resource.uri, '/1.0/sample-resource/a%20resource')
 
 

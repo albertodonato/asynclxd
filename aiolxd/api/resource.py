@@ -38,9 +38,15 @@ class ResourceCollection(metaclass=abc.ABCMeta):
             'POST', self._uri(), content=details)
         return self.resource_class(self._remote, response.location)
 
-    def get(self, id):
-        """Return a single resource in the collection."""
-        return self.resource_class(self._remote, self._uri(id=id))
+    async def get(self, id):
+        """Return a single resource in the collection.
+
+        This performs a :data:`GET` call to fetch resource details.
+
+        """
+        resource = self.resource_class(self._remote, self._uri(id=id))
+        await resource.read()
+        return resource
 
     async def read(self, recursion=False):
         """Return resources for this collection.
