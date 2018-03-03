@@ -7,6 +7,8 @@ from json import dumps as json_dumps
 from aiohttp import (
     ClientResponse,
     RequestInfo,
+    WSMsgType,
+
 )
 from multidict import CIMultiDict
 from yarl import URL
@@ -15,6 +17,19 @@ from .http import (
     ContentStream,
     Response,
 )
+
+
+class AsyncIterator:
+    """Wrapper to convert a sync iterator to async."""
+
+    def __init__(self, iterable):
+        self.iterable = iter(iterable)
+
+    async def __anext__(self):
+        try:
+            return next(self.iterable)
+        except StopIteration:
+            raise StopAsyncIteration()
 
 
 class FakeRemote:
@@ -38,9 +53,10 @@ class FakeRemote:
 class FakeSession:
     """A fake session class."""
 
-    def __init__(self, connector=None, responses=None):
+    def __init__(self, connector=None, responses=(), websocket=None):
         self.connector = connector
-        self.responses = responses or []
+        self.responses = list(responses)
+        self.websocket = websocket
         self.calls = []
 
     async def request(self, method, path, params=None, headers=None,
@@ -55,8 +71,43 @@ class FakeSession:
         return make_http_response(
             method=method, url=path, content=response_content)
 
+    def ws_connect(self, path):
+        return self.websocket
+
     async def close(self):
         pass
+
+
+class FakeWebSocket:
+    """A fake websocket context manager."""
+
+    closed = False
+
+    def __init__(self, messages=()):
+        self.messages = messages
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
+
+    def __aiter__(self):
+        return AsyncIterator(self.messages)
+
+    def close(self):
+        self.closed = True
+
+
+class FakeWSMessage:
+    """A Fake websocket message."""
+
+    def __init__(self, data, type='TEXT'):
+        self.type = getattr(WSMsgType, type)
+        self.data = data
+
+    def json(self):
+        return json_dumps(self.data)
 
 
 class FakeStreamReader(ContentStream):

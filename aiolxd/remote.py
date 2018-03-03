@@ -14,6 +14,7 @@ to access resources exposed by the API.
 
 """
 
+from asyncio import get_event_loop
 from collections import namedtuple
 import ssl
 
@@ -27,10 +28,8 @@ from toolrack.log import Loggable
 from .api import (
     Collection,
     resources,
-)
-from .api.http import (
-    request,
-    Response,
+    http,
+    websocket
 )
 from .uri import RemoteURI
 
@@ -86,11 +85,13 @@ class Remote(Loggable):
 
     _session_factory = ClientSession  # for testing
     _session = None
+    _loop = None
 
-    def __init__(self, uri, certs=None, version='1.0'):
+    def __init__(self, uri, certs=None, version='1.0', loop=None):
         self.uri = RemoteURI(uri)
         self.certs = certs
         self.version = version
+        self._loop = loop or get_event_loop()
         self._remote = self  # for the Collection wrapper
 
     def __repr__(self):
@@ -156,6 +157,11 @@ class Remote(Loggable):
 
         return response.metadata.get('config', {})
 
+    @property
+    def events(self):
+        """Return a handler yielding events of specified types."""
+        return resources.Events(self)
+
     async def request(self, method, path, params=None, headers=None,
                       content=None, upload=None):
         """Perform an API request within the session.
@@ -178,10 +184,30 @@ class Remote(Loggable):
             method=method, path=self._full_path(path, params=params),
             content=content))
         path = self._full_path(path)
-        response = await request(
+        response = await http.request(
             self._session, method, path, params=params, headers=headers,
             content=content, upload=upload)
         return await self._make_response(response)
+
+    def websocket(self, handler_class, path, params=None):
+        """"Connect a handler to a websocket URL.
+
+        :param .api.WebsocketHandler handler_class: handler class for the
+             websocket.
+        :param str path: the request path. If the path doesn't begin with a
+            slash, it's prepended with the API version the remote is
+            configured with.
+        :param dict params: optional query string parameters.
+
+        """
+        if not self._session:
+            raise SessionError('Not in a session')
+
+        path = self._full_path(path, params=params)
+        self.logger.debug('{handler_class} {path}'.format(
+            handler_class=handler_class.__name__, path=path))
+        return self._loop.create_task(
+            websocket.connect(self._session, path, handler_class))
 
     def _full_path(self, path, params=None):
         """Return the full path for a request."""
@@ -197,7 +223,7 @@ class Remote(Loggable):
             content = await http_response.json()
         else:
             content = http_response.content
-        return Response(self, http_response.status, headers, content)
+        return http.Response(self, http_response.status, headers, content)
 
     def _connector(self):
         """Return a connector for the HTTP session."""

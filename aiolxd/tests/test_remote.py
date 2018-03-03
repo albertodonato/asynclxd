@@ -11,9 +11,13 @@ from toolrack.testing import TempDirFixture
 
 from ..api.testing import (
     FakeSession,
+    FakeWebSocket,
+    FakeWSMessage,
     make_http_response,
     make_response_content,
 )
+from ..api.resources import Events
+from ..api.websocket import WebsocketHandler
 from ..remote import (
     Remote,
     SessionError,
@@ -69,6 +73,10 @@ class RemoteTests(TestCase, TestWithFixtures):
         with self.assertRaises(SessionError) as cm:
             await self.remote.close()
         self.assertEqual(str(cm.exception), 'Not in a session')
+
+    async def test_events(self):
+        """The events method returns an Events instance."""
+        self.assertIsInstance(self.remote.events, Events)
 
     async def test_request(self):
         """Requests can be performed with the server."""
@@ -163,6 +171,30 @@ class RemoteTests(TestCase, TestWithFixtures):
             session.calls,
             [('GET', 'https://example.com:8443/1.0/relative-path', None,
               {}, None)])
+
+    async def test_websocket(self):
+        """Websocket connections can be performed with the server."""
+        messages = [FakeWSMessage('foo'), FakeWSMessage('bar')]
+        session = FakeSession(websocket=FakeWebSocket(messages=messages))
+        self.remote._session_factory = lambda connector=None: session
+
+        messages = []
+
+        class SampleHandler(WebsocketHandler):
+
+            async def handle_message(self, message):
+                messages.append(message)
+
+        async with self.remote:
+            await self.remote.websocket(SampleHandler, '/')
+
+        self.assertEqual(messages, ['"foo"', '"bar"'])
+
+    async def test_websocket_not_in_session(self):
+        """A SessionError is raised if websocket is not called in a session."""
+        with self.assertRaises(SessionError) as cm:
+            await self.remote.websocket(object, '/')
+        self.assertEqual(str(cm.exception), 'Not in a session')
 
     async def test_connector_unix(self):
         """If the URI is for a UNIX socket, a UnixConnector is used."""
