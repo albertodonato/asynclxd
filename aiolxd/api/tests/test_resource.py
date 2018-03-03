@@ -3,7 +3,7 @@ from unittest import TestCase
 
 from toolrack.testing.async import LoopTestCase
 
-from ..request import Response
+from ..http import Response
 from ..resource import (
     Collection,
     NamedResource,

@@ -1,6 +1,6 @@
 """API testing helpers"""
 
-from .request import Response
+from .http import Response
 
 
 class FakeRemote:

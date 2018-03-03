@@ -5,7 +5,7 @@ from unittest import TestCase
 from toolrack.testing import TempDirFixture
 from toolrack.testing.async import LoopTestCase
 
-from ..request import (
+from ..http import (
     request,
     Response,
     ResponseError,

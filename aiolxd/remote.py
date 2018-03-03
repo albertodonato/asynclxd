@@ -26,9 +26,9 @@ from toolrack.log import Loggable
 
 from .api import (
     Collection,
-    request,
     resources,
 )
+from .api.http import request
 from .uri import RemoteURI
 
 
