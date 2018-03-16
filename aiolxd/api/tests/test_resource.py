@@ -84,6 +84,20 @@ class ResourceCollectionTests(LoopTestCase):
             [SampleResource(remote, '/resources/one'),
              SampleResource(remote, '/resources/two')])
 
+    async def test_read_process_content_override(self):
+        """It's possible to further process details from the call result."""
+        remote = FakeRemote(responses=[['/resources/one', '/resources/two']])
+        collection = SampleResourceCollection(remote)
+
+        def process_content(content):
+            return ['/new' + entry for entry in content]
+
+        collection._process_content = process_content
+        self.assertEqual(
+            await collection.read(),
+            [SampleResource(remote, '/new/resources/one'),
+             SampleResource(remote, '/new/resources/two')])
+
     async def test_recursion(self):
         """The read method returns resources with details if recursive."""
         remote = FakeRemote(
@@ -195,6 +209,12 @@ class ResourceTests(LoopTestCase):
         resource = SampleResource(FakeRemote(), '/resource/my%20resource')
         self.assertEqual(resource.id, 'my resource')
 
+    def test_uri(self):
+        """The _uri() method returns a URI below the resource."""
+        resource = SampleResource(FakeRemote(), '/resource/myresource')
+        self.assertEqual(
+            resource._uri('details'), '/resource/myresource/details')
+
     def test_details_no_cached(self):
         """If no details are cached, details() resutns None."""
         resource = SampleResource(FakeRemote(), '/resource')
@@ -249,7 +269,15 @@ class ResourceTests(LoopTestCase):
         self.assertEqual(related2.uri, '/resource/two')
 
     async def test_read_related_resources_not_found(self):
-        """If attribute for related resources is not found, it's ignored."""
+        """If the attribute for related resources is found, it's ignored."""
+        details = {'id': 'res'}
+        remote = FakeRemote(responses=[details])
+        resource = SampleResourceWithRelated(remote, '/resource-with-related')
+        await resource.read()
+        self.assertEqual(resource.details(), details)
+
+    async def test_read_related_resources_leaf_not_found(self):
+        """If leaf attr for related resources is not found, it's ignored."""
         details = {'id': 'res', 'foo': {'bar': 'baz'}}
         remote = FakeRemote(responses=[details])
         resource = SampleResourceWithRelated(remote, '/resource-with-related')

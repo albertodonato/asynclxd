@@ -62,10 +62,22 @@ class ResourceCollection(metaclass=abc.ABCMeta):
         if self._raw:
             return content
 
+        content = self._process_content(content)
         if recursion:
             return [
                 self._resource_from_details(details) for details in content]
         return [self.resource_class(self._remote, uri) for uri in content]
+
+    def _process_content(self, content):
+        """Process metadata content before creating resources.
+
+        It should return a list of dicts with resources details.
+        By default, it returns the content as it is.
+
+        This can be overridden by subclasses.
+
+        """
+        return content
 
     def _resource_from_details(self, details):
         """Return a resource instance from its details."""
@@ -172,6 +184,10 @@ class Resource(metaclass=abc.ABCMeta):
         """Delete this resource."""
         return await self._remote.request('DELETE', self.uri)
 
+    def _uri(self, path):
+        """Return a URI below the resource URI."""
+        return '{}/{}'.format(self.uri, path)
+
     def _get_headers(self, etag=False):
         """Return headers for a request."""
         headers = {}
@@ -195,7 +211,7 @@ class Resource(metaclass=abc.ABCMeta):
             for key in keys:
                 entry = entry.get(key)
                 if not entry:
-                    continue
+                    break
             if not entry:
                 continue
             # replace with resource instances
@@ -220,6 +236,7 @@ class NamedResource(Resource):
         """
         response = await self._remote.request(
             'POST', self.uri, content={'name': name})
+        self._set_related_resources(response)
         self._update_cache(response)
         # URI has changed
         self.uri = response.location

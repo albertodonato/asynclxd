@@ -50,6 +50,7 @@ class Remote(Loggable):
     - :data:`containers`
     - :data:`images`
     - :data:`networks`
+    - :data:`operations`
     - :data:`profiles`
 
     Those allow creating new resources or fetching existing ones to interact
@@ -72,6 +73,8 @@ class Remote(Loggable):
     images = Collection(resources.Images)
     #: Collection property for accessing networks.
     networks = Collection(resources.Networks)
+    #: Collection property for accessing background operations.
+    operations = Collection(resources.Operations)
     #: Collection property for accessing profiles.
     profiles = Collection(resources.Profiles)
 
