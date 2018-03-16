@@ -186,3 +186,42 @@ class RemoteTests(LoopTestCase):
             session.calls,
             [('GET', 'https://example.com:8443/1.0', None, {}, None)])
         self.assertEqual(response, info)
+
+    async def test_config_read(self):
+        """It's possible to read the server configuration."""
+        info = {
+            'config': {'core.https_address': '[]:8443'},
+            'api_version': '1.0'}
+        session = FakeSession(responses=[make_sync_response(info)])
+        self.remote._session_factory = lambda connector=None: session
+
+        async with self.remote:
+            config = await self.remote.config()
+        self.assertEqual(
+            session.calls,
+            [('GET', 'https://example.com:8443/1.0', None, {}, None)])
+        self.assertEqual(config, info['config'])
+
+    async def test_config_update(self):
+        """It's possible to update the server configuration."""
+        options = {'core.https_address': '[]:8443'}
+        session = FakeSession(responses=[make_sync_response({})])
+        self.remote._session_factory = lambda connector=None: session
+        async with self.remote:
+            await self.remote.config(options=options)
+        self.assertEqual(
+            session.calls,
+            [('PATCH', 'https://example.com:8443/1.0', None,
+              {'Content-Type': 'application/json'}, {'config': options})])
+
+    async def test_config_replace(self):
+        """It's possible to replace the server configuration."""
+        options = {'core.https_address': '[]:8443'}
+        session = FakeSession(responses=[make_sync_response({})])
+        self.remote._session_factory = lambda connector=None: session
+        async with self.remote:
+            await self.remote.config(options=options, replace=True)
+        self.assertEqual(
+            session.calls,
+            [('PUT', 'https://example.com:8443/1.0', None,
+              {'Content-Type': 'application/json'}, {'config': options})])

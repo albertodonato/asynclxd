@@ -119,6 +119,24 @@ class Remote(Loggable):
         response = await self.request('GET', '')
         return response.metadata
 
+    async def config(self, options=None, replace=False):
+        """Return or change the server configuration.
+
+        :param dict options: configuration options to apply. if not provided,
+            the current configuration is returned.
+        :param bool replace: whether to replace the current configuration with
+            the one provided instead of updating it.
+
+        """
+        if options is None:
+            response = await self.request('GET', '')
+        else:
+            method = 'PUT' if replace else 'PATCH'
+            response = await self.request(
+                method, '', content={'config': options})
+
+        return response.metadata.get('config', {})
+
     async def request(self, method, path, params=None, headers=None,
                       content=None, upload=None):
         """Perform an API request within the session.
@@ -138,8 +156,9 @@ class Remote(Loggable):
             raise SessionError('Not in a session')
 
         path = self._full_path(path)
-        self.logger.debug('{method} {path}'.format(
-            method=method, path=self._full_path(path, params=params)))
+        self.logger.debug('{method} {path} {content}'.format(
+            method=method, path=self._full_path(path, params=params),
+            content=content))
         return await request(
             self._session, method, path, params=params, headers=headers,
             content=content, upload=upload)
