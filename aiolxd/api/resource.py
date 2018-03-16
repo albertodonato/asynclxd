@@ -138,6 +138,12 @@ class Resource(metaclass=abc.ABCMeta):
         if value:
             return unquote(value)
 
+    def update_details(self, details):
+        """Update deatils for the resource."""
+        self._last_etag = None  # reset ETag
+        self._details = deepcopy(details)
+        self._set_related_resources(self._details)
+
     def details(self):
         """Return details about this resource.
 
@@ -154,8 +160,7 @@ class Resource(metaclass=abc.ABCMeta):
     async def read(self):
         """Return details for this resource."""
         response = await self._remote.request('GET', self.uri)
-        self._set_related_resources(response)
-        self._update_cache(response)
+        self._process_response(response)
         return response
 
     async def update(self, details, etag=True):
@@ -195,18 +200,19 @@ class Resource(metaclass=abc.ABCMeta):
             headers['If-Match'] = self._last_etag
         return headers or None
 
-    def _update_cache(self, response):
-        """Update cached information from response."""
+    def _process_response(self, response):
+        """Process response with resource details."""
         self._last_etag = response.etag
-        self._details = response.metadata
+        self._set_related_resources(response.metadata)
+        self._details = deepcopy(response.metadata)
 
-    def _set_related_resources(self, response):
+    def _set_related_resources(self, metadata):
         """Convert related resoruces URIs to resource instances."""
-        if not self.related_resources:
+        if not self.related_resources or not metadata:
             return
 
         for keys, resource_class in self.related_resources:
-            entry = response.metadata
+            entry = metadata
             # find the attriute in the response
             for key in keys:
                 entry = entry.get(key)
@@ -236,8 +242,7 @@ class NamedResource(Resource):
         """
         response = await self._remote.request(
             'POST', self.uri, content={'name': name})
-        self._set_related_resources(response)
-        self._update_cache(response)
+        self._process_response(response)
         # URI has changed
         self.uri = response.location
         return response

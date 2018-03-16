@@ -25,8 +25,7 @@ class Operation(Resource):
         params = {'timeout': timeout} if timeout else None
         response = await self._remote.request(
             'GET', self._uri('wait'), params=params)
-        self._set_related_resources(response)
-        self._update_cache(response)
+        self._process_response(response)
         return response
 
 

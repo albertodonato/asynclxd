@@ -215,6 +215,37 @@ class ResourceTests(LoopTestCase):
         self.assertEqual(
             resource._uri('details'), '/resource/myresource/details')
 
+    def test_update_details(self):
+        """The update_details() method updates resource details."""
+        resource = SampleResource(FakeRemote(), '/resource/myresource')
+        details = {'some': 'detail'}
+        resource.update_details(details)
+        self.assertEqual(resource.details(), details)
+        # resource details are copied
+        resource._details['some'] = 'other'
+        self.assertEqual(details['some'], 'detail')
+
+    def test_update_details_sets_related(self):
+        """The update_details() method sets related resources."""
+        details = {
+            'id': 'res',
+            'foo': {'sample': ['/resource/one', '/resource/two']}}
+        remote = FakeRemote(responses=[details])
+        resource = SampleResourceWithRelated(remote, '/resource-with-related')
+        resource.update_details(details)
+        related1, related2 = resource['foo']['sample']
+        self.assertIsInstance(related1, SampleResource)
+        self.assertEqual(related1.uri, '/resource/one')
+        self.assertIsInstance(related2, SampleResource)
+        self.assertEqual(related2.uri, '/resource/two')
+
+    def test_update_details_reset_etag(self):
+        """The update_details() reset last ETag."""
+        resource = SampleResource(FakeRemote(), '/resource/myresource')
+        resource._last_etag = 'abc'
+        resource.update_details({'some': 'detail'})
+        self.assertIsNone(resource._last_etag)
+
     def test_details_no_cached(self):
         """If no details are cached, details() resutns None."""
         resource = SampleResource(FakeRemote(), '/resource')
