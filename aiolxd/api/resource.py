@@ -83,7 +83,7 @@ class ResourceCollection(metaclass=abc.ABCMeta):
         """Return a resource instance from its details."""
         resource_id = details[self.resource_class.id_attribute]
         resource = self.resource_class(self._remote, self._uri(id=resource_id))
-        resource._details = details
+        resource.update_details(details)
         return resource
 
     def _uri(self, id=None):

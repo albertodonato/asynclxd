@@ -6,10 +6,20 @@ from ..operations import (
     Operation,
     Operations,
 )
+from ...http import Response
 from ...testing import FakeRemote
 
 
 class OperationTest(LoopTestCase):
+
+    async def test_from_response(self):
+        """It's possible to return an Operation from an API Response."""
+        metadata = {'some': 'details'}
+        response = Response(
+            202, {'Location': '/operations/op'}, {'metadata': metadata})
+        operation = Operation.from_response(FakeRemote(), response)
+        self.assertEqual(operation.uri, '/operations/op')
+        self.assertEqual(operation.details(), metadata)
 
     async def test_related_resources(self):
         """Related resources are returned as instances.."""

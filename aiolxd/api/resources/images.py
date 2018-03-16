@@ -11,6 +11,12 @@ class Image(Resource):
 
     id_attribute = 'fingerprint'
 
+    async def secret(self):
+        """Create a secret for this image."""
+        response = await self._remote.request('POST', self._uri('secret'))
+        from .operations import Operation
+        return Operation.from_response(self._remote, response)
+
 
 class Images(ResourceCollection):
     """Images collection API methods."""

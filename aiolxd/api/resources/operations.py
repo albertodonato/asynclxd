@@ -21,6 +21,12 @@ class Operation(Resource):
         # XXX add "cluster" once resources is supported
     ])
 
+    @classmethod
+    def from_response(cls, remote, response):
+        operation = cls(remote, response.location)
+        operation.update_details(response.metadata)
+        return operation
+
     async def wait(self, timeout=None):
         params = {'timeout': timeout} if timeout else None
         response = await self._remote.request(
