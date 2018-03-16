@@ -115,8 +115,13 @@ class Remote(Loggable):
         return [version.lstrip('/') for version in response.metadata]
 
     async def info(self):
-        """Return a dict with information about the server configuration."""
+        """Return a dict with information about server configuration."""
         response = await self.request('GET', '')
+        return response.metadata
+
+    async def resources(self):
+        """Return a dict with information about server resources."""
+        response = await self.request('GET', 'resources')
         return response.metadata
 
     async def config(self, options=None, replace=False):

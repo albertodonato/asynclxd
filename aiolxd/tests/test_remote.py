@@ -187,6 +187,20 @@ class RemoteTests(LoopTestCase):
             [('GET', 'https://example.com:8443/1.0', None, {}, None)])
         self.assertEqual(response, info)
 
+    async def test_resources(self):
+        """It's possible to query for server resources."""
+        resources = {'memory': {'total': 100, 'used': 50}}
+        session = FakeSession(responses=[make_sync_response(resources)])
+        self.remote._session_factory = lambda connector=None: session
+
+        async with self.remote:
+            response = await self.remote.resources()
+        self.assertEqual(
+            session.calls,
+            [('GET', 'https://example.com:8443/1.0/resources', None, {},
+              None)])
+        self.assertEqual(response, resources)
+
     async def test_config_read(self):
         """It's possible to read the server configuration."""
         info = {
