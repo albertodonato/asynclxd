@@ -82,7 +82,7 @@ class Remote(Loggable):
         self.uri = RemoteURI(uri)
         self.certs = certs
         self.version = version
-        self._remote = self
+        self._remote = self  # for the Collection wrapper
 
     def __repr__(self):
         return '{cls}({uri!r})'.format(
