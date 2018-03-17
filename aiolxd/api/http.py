@@ -10,14 +10,14 @@ from aiohttp import (
     StreamReader,
 )
 
+from .resources.operations import Operation
+
 
 class ContentStream(ABC):
     """Abstract base class for classes providing streaming content."""
 
 
 ContentStream.register(StreamReader)
-
-from .resources.operations import Operation
 
 
 class Response:
