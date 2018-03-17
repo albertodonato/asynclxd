@@ -1,7 +1,7 @@
 from copy import deepcopy
 from unittest import TestCase
 
-from toolrack.testing.async import LoopTestCase
+from asynctest import TestCase as AsyncTestCase
 
 from ..http import Response
 from ..resource import (
@@ -57,7 +57,7 @@ class CollectionTests(TestCase):
         self.assertIs(collection.remote, remote)
 
 
-class ResourceCollectionTests(LoopTestCase):
+class ResourceCollectionTests(AsyncTestCase):
 
     def test_raw(self):
         """The raw method returns a collection with raw attribute set."""
@@ -133,7 +133,7 @@ class ResourceCollectionTests(LoopTestCase):
         self.assertEqual(resource.uri, '/1.0/sample-resource/a%20resource')
 
 
-class ResourceTests(LoopTestCase):
+class ResourceTests(AsyncTestCase):
 
     def test_repr(self):
         """The object repr contains the URI."""
@@ -400,7 +400,7 @@ class ResourceTests(LoopTestCase):
             remote.calls, [(('DELETE', '/resource', None, None, None, None))])
 
 
-class NamedResourceTests(LoopTestCase):
+class NamedResourceTests(AsyncTestCase):
 
     async def test_rename(self):
         """A named resource can be renamed."""

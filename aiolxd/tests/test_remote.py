@@ -5,8 +5,9 @@ from aiohttp import (
     TCPConnector,
     UnixConnector,
 )
+from asynctest import TestCase
+from fixtures import TestWithFixtures
 from toolrack.testing import TempDirFixture
-from toolrack.testing.async import LoopTestCase
 
 from ..api.testing import (
     FakeSession,
@@ -19,11 +20,10 @@ from ..remote import (
 )
 
 
-class RemoteTests(LoopTestCase):
+class RemoteTests(TestCase, TestWithFixtures):
 
     def setUp(self):
         super().setUp()
-        self.tempdir = self.useFixture(TempDirFixture())
         self.remote = Remote('https://example.com:8443')
 
     def test_repr(self):
@@ -43,16 +43,16 @@ class RemoteTests(LoopTestCase):
     async def test_open(self):
         """The open method creates a session."""
         self.remote.open()
-        self.addCleanup(self.remote.close())
         self.assertIsNotNone(self.remote._session)
+        await self.remote.close()
 
-    def test_open_already_in_session(self):
+    async def test_open_already_in_session(self):
         """A SessionError is raised if already in a session."""
         self.remote.open()
-        self.addCleanup(self.remote.close())
         with self.assertRaises(SessionError) as cm:
             self.remote.open()
         self.assertEqual(str(cm.exception), 'Already in a session')
+        await self.remote.close()
 
     async def test_close(self):
         """The close method ends a session."""
@@ -105,7 +105,8 @@ class RemoteTests(LoopTestCase):
 
     async def test_remote_with_upload(self):
         """Request can include a file to upload."""
-        upload_file = Path(self.tempdir.mkfile(content='data'))
+        tempdir = self.useFixture(TempDirFixture())
+        upload_file = Path(tempdir.mkfile(content='data'))
         session = FakeSession(responses=[make_response_content(['response'])])
         self.remote._session_factory = lambda connector=None: session
 

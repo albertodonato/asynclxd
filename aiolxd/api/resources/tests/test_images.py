@@ -1,4 +1,4 @@
-from toolrack.testing.async import LoopTestCase
+from asynctest import TestCase
 
 from ..images import Image
 from ..operations import Operation
@@ -6,7 +6,7 @@ from ...http import Response
 from ...testing import FakeRemote
 
 
-class ImageTest(LoopTestCase):
+class ImageTest(TestCase):
 
     async def test_read_with_secret(self):
         """It's possible to pass a secret to the read operation."""

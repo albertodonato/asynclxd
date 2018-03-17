@@ -10,6 +10,8 @@ from aiolxd import (
 )
 
 
+tests_require = ['asynctest']
+
 config = {
     'name': 'aiolxd',
     'version': __version__,
@@ -26,8 +28,9 @@ config = {
     'entry_points': {'console_scripts': []},
     'test_suite': 'aiolxd',
     'install_requires': ['aiohttp', 'pyxdg', 'PyYAML', 'toolrack'],
-    'tests_require': [],
-    'keywords': '',
+    'tests_require': tests_require,
+    'extras_require': {'testing': tests_require},
+    'keywords': 'LXD rest API',
     'classifiers': [
         'Development Status :: 3 - Alpha',
         ('License :: OSI Approved :: '

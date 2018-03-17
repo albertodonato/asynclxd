@@ -2,8 +2,9 @@ from io import StringIO
 from pathlib import Path
 from textwrap import dedent
 
+from asynctest import TestCase
+from fixtures import TestWithFixtures
 from toolrack.testing import TempDirFixture
-from toolrack.testing.async import LoopTestCase
 
 from ..http import (
     request,
@@ -20,7 +21,7 @@ from ..testing import (
 )
 
 
-class RequestTests(LoopTestCase):
+class RequestTests(TestCase, TestWithFixtures):
 
     def setUp(self):
         super().setUp()
@@ -117,7 +118,7 @@ class RequestTests(LoopTestCase):
         self.assertEqual(cm.exception.code, 401)
 
 
-class ResponseTests(LoopTestCase):
+class ResponseTests(TestCase):
 
     def test_instantiate(self):
         """A Response can be instantiated."""

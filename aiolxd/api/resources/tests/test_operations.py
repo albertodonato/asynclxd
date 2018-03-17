@@ -1,4 +1,4 @@
-from toolrack.testing.async import LoopTestCase
+from asynctest import TestCase
 
 from ..containers import Container
 from ..images import Image
@@ -9,7 +9,7 @@ from ..operations import (
 from ...testing import FakeRemote
 
 
-class OperationTest(LoopTestCase):
+class OperationTest(TestCase):
 
     def test_related_resources(self):
         """Related resources are returned as instances.."""
@@ -51,7 +51,7 @@ class OperationTest(LoopTestCase):
                None))])
 
 
-class OperationsTests(LoopTestCase):
+class OperationsTests(TestCase):
 
     async def test_read(self):
         """The read method returns opreations in all statuses."""
