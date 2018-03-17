@@ -1,11 +1,21 @@
 """Perform requests to the API."""
 
-from io import IOBase
+from abc import ABC
 import os
 from pathlib import Path
 from pprint import pformat
 
-from aiohttp import ClientResponseError
+from aiohttp import (
+    ClientResponseError,
+    StreamReader,
+)
+
+
+class ContentStream(ABC):
+    """Abstract base class for classes providing streaming content."""
+
+
+ContentStream.register(StreamReader)
 
 
 class Response:
@@ -28,12 +38,24 @@ class Response:
         self.http_code = http_code
         self.etag = headers.get('ETag')
         self.location = headers.get('Location')
-        if isinstance(content, IOBase):
+        if isinstance(content, ContentStream):
             self._content = content
             self.type = 'raw'
         else:
             self.type = content.get('type')
             self.metadata = content.get('metadata', {})
+
+    async def write_content(self, stream):
+        """Write the response payload to the specified stream.
+
+        The stream should be open in binary mode.
+
+        """
+        if not self._content:
+            raise ValueError('No binary payload')
+
+        async for data in self._content.iter_any():
+            stream.write(data)
 
     def pprint(self):
         """Pretty-print the response.

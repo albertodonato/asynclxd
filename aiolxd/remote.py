@@ -28,7 +28,10 @@ from .api import (
     Collection,
     resources,
 )
-from .api.http import request
+from .api.http import (
+    request,
+    Response,
+)
 from .uri import RemoteURI
 
 
@@ -167,9 +170,10 @@ class Remote(Loggable):
         self.logger.debug('{method} {path} {content}'.format(
             method=method, path=self._full_path(path, params=params),
             content=content))
-        return await request(
+        response = await request(
             self._session, method, path, params=params, headers=headers,
             content=content, upload=upload)
+        return await self._make_response(response)
 
     def _full_path(self, path, params=None):
         """Return the full path for a request."""
@@ -178,6 +182,14 @@ class Remote(Loggable):
         elif not path.startswith('/'):
             path = '/{version}/{path}'.format(version=self.version, path=path)
         return self.uri.request_path(path, params=params)
+
+    async def _make_response(self, http_response):
+        headers = http_response.headers
+        if headers.get('Content-Type') == 'application/json':
+            content = await http_response.json()
+        else:
+            content = http_response.content
+        return Response(self, http_response.status, headers, content)
 
     def _connector(self):
         """Return a connector for the HTTP session."""

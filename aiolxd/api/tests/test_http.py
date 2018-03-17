@@ -1,7 +1,6 @@
 from io import StringIO
 from pathlib import Path
 from textwrap import dedent
-from unittest import TestCase
 
 from toolrack.testing import TempDirFixture
 from toolrack.testing.async import LoopTestCase
@@ -14,6 +13,7 @@ from ..http import (
 from ..testing import (
     FakeRemote,
     FakeSession,
+    FakeStreamReader,
     make_error_response,
     make_http_response,
 )
@@ -99,7 +99,7 @@ class RequestTests(LoopTestCase):
     async def test_request_error_from_payload(self):
         """Error details can be obtained from the response payload."""
         self.session.responses.append(
-            make_error_response('Cancelled', code=401, http_status=400))
+            make_error_response('Cancelled', code=401))
         with self.assertRaises(ResponseError) as cm:
             await request(self.session, 'GET', '/'),
         self.assertEqual(cm.exception.code, 401)
@@ -107,8 +107,16 @@ class RequestTests(LoopTestCase):
         self.assertEqual(
             str(cm.exception), 'API request failed with 401: Cancelled')
 
+    async def test_request_error_paylod_code_overrides_http(self):
+        """The error code from the payload takes precedence on the HTTP one."""
+        self.session.responses.append(
+            make_error_response('Cancelled', code=401, http_status=400))
+        with self.assertRaises(ResponseError) as cm:
+            await request(self.session, 'GET', '/'),
+        self.assertEqual(cm.exception.code, 401)
 
-class ResponseTests(TestCase):
+
+class ResponseTests(LoopTestCase):
 
     def test_instantiate(self):
         """A Response can be instantiated."""
@@ -127,6 +135,21 @@ class ResponseTests(TestCase):
         self.assertEqual(response.type, 'raw')
         self.assertIsNone(response.metadata)
         self.assertIs(response._content, content)
+
+    async def test_write_content(self):
+        """Response binary content can be written to file."""
+        content = FakeStreamReader(StringIO('some content'))
+        response = Response(FakeRemote(), 200, {}, content)
+        out_stream = StringIO()
+        await response.write_content(out_stream)
+        self.assertEqual(out_stream.getvalue(), 'some content')
+
+    async def test_write_content_not_binary(self):
+        """If there's no binary payload, trying to write raises an error."""
+        response = Response(FakeRemote(), 200, {}, {'some': 'content'})
+        with self.assertRaises(ValueError) as cm:
+            await response.write_content(StringIO())
+        self.assertEqual(str(cm.exception), 'No binary payload')
 
     def test_pprint(self):
         """The pprint method pretty-prints the response."""

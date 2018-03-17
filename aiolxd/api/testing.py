@@ -1,13 +1,16 @@
 """API testing helpers."""
 
 import io
+from json import dumps as json_dumps
 
 from aiohttp import ClientResponse
-from json import dumps as json_dumps
 from multidict import CIMultiDict
 from yarl import URL
 
-from .http import Response
+from .http import (
+    ContentStream,
+    Response,
+)
 
 
 class FakeRemote:
@@ -25,7 +28,7 @@ class FakeRemote:
         response = self.responses.pop(0)
         if isinstance(response, Response):
             return response
-        return Response(self, 200, {}, make_sync_response(response))
+        return Response(self, 200, {}, make_response_content(response))
 
 
 class FakeSession:
@@ -52,6 +55,37 @@ class FakeSession:
         pass
 
 
+class FakeStreamReader(ContentStream):
+    """A fake StreamReader implementation."""
+
+    def __init__(self, stream):
+        self._stream = stream
+
+    def iter_any(self):
+        return FakeStreamIterator(self._stream)
+
+
+# register StringIO since it's used in tests
+ContentStream.register(io.StringIO)
+
+
+class FakeStreamIterator:
+    """A fake stream iterator."""
+
+    def __init__(self, stream):
+        self._content = stream.read()
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if not self._content:
+            raise StopAsyncIteration()
+
+        content, self._content = self._content, None
+        return content
+
+
 def make_http_response(status=200, reason='OK', method='GET', url='/',
                        content=None):
     response = ClientResponse(method, URL(url))
@@ -59,7 +93,7 @@ def make_http_response(status=200, reason='OK', method='GET', url='/',
     response.reason = reason
     response.headers = CIMultiDict()
     if isinstance(content, io.IOBase):
-        response._content = content.read()
+        response.content = FakeStreamReader(content)
     elif content is not None:
         response._content = json_dumps(content).encode('utf8')
         response.headers['Content-Type'] = 'application/json'
@@ -79,18 +113,18 @@ def make_error_response(error, code=400, http_status=None):
         status=http_status, reason='Failure', content=content)
 
 
+def make_response_content(metadata=None):
+    """Return content for an API successful response."""
+    return {
+        'type': 'sync',
+        'status': 'Success',
+        'status_code': 200,
+        'metadata': metadata or {}}
+
+
 def make_resource(resource_class, uri='/resource', etag=None, details=None):
     """Return a resource instance with specified details."""
     resource = resource_class(FakeRemote(), uri)
     resource._last_etag = etag
     resource._details = details
     return resource
-
-
-def make_sync_response(metadata=None):
-    """Return a response for a synchronous operation."""
-    return {
-        'type': 'sync',
-        'status': 'Success',
-        'status_code': 200,
-        'metadata': metadata or {}}

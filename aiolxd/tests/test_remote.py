@@ -1,3 +1,4 @@
+from io import StringIO
 from pathlib import Path
 
 from aiohttp import (
@@ -9,7 +10,8 @@ from toolrack.testing.async import LoopTestCase
 
 from ..api.testing import (
     FakeSession,
-    make_sync_response,
+    make_http_response,
+    make_response_content,
 )
 from ..remote import (
     Remote,
@@ -66,7 +68,7 @@ class RemoteTests(LoopTestCase):
 
     async def test_request(self):
         """Requests can be performed with the server."""
-        session = FakeSession(responses=[make_sync_response(['response'])])
+        session = FakeSession(responses=[make_response_content(['response'])])
         self.remote._session_factory = lambda connector=None: session
 
         async with self.remote:
@@ -78,7 +80,7 @@ class RemoteTests(LoopTestCase):
 
     async def test_request_with_content(self):
         """Requests can include content."""
-        session = FakeSession(responses=[make_sync_response(['response'])])
+        session = FakeSession(responses=[make_response_content(['response'])])
         self.remote._session_factory = lambda connector=None: session
 
         content = {'some': 'content'}
@@ -91,7 +93,7 @@ class RemoteTests(LoopTestCase):
 
     async def test_request_with_params(self):
         """Requests can include params."""
-        session = FakeSession(responses=[make_sync_response(['response'])])
+        session = FakeSession(responses=[make_response_content(['response'])])
         self.remote._session_factory = lambda connector=None: session
 
         params = {'a': 'param'}
@@ -104,7 +106,7 @@ class RemoteTests(LoopTestCase):
     async def test_remote_with_upload(self):
         """Request can include a file to upload."""
         upload_file = Path(self.tempdir.mkfile(content='data'))
-        session = FakeSession(responses=[make_sync_response(['response'])])
+        session = FakeSession(responses=[make_response_content(['response'])])
         self.remote._session_factory = lambda connector=None: session
 
         async with self.remote:
@@ -116,7 +118,7 @@ class RemoteTests(LoopTestCase):
 
     async def test_request_with_headers(self):
         """Requests can include content."""
-        session = FakeSession(responses=[make_sync_response(['response'])])
+        session = FakeSession(responses=[make_response_content(['response'])])
         self.remote._session_factory = lambda connector=None: session
 
         async with self.remote:
@@ -127,6 +129,18 @@ class RemoteTests(LoopTestCase):
             [('POST', 'https://example.com:8443', None,
               {'X-Sample': 'value'}, None)])
 
+    async def test_request_binary_response(self):
+        """Requests can include content."""
+        content = StringIO('some content')
+        session = FakeSession(responses=[make_http_response(content=content)])
+        self.remote._session_factory = lambda connector=None: session
+
+        out_stream = StringIO()
+        async with self.remote:
+            response = await self.remote.request('GET', '/')
+            await response.write_content(out_stream)
+        self.assertEqual(out_stream.getvalue(), 'some content')
+
     async def test_request_not_in_session(self):
         """A SessionError is raised if request is not called in a session."""
         with self.assertRaises(SessionError) as cm:
@@ -135,7 +149,7 @@ class RemoteTests(LoopTestCase):
 
     async def test_request_relative_path(self):
         """If request path is relative, it's prefixed with the API version."""
-        session = FakeSession(responses=[make_sync_response()])
+        session = FakeSession(responses=[make_response_content()])
         self.remote._session_factory = lambda connector=None: session
 
         async with self.remote:
@@ -164,7 +178,7 @@ class RemoteTests(LoopTestCase):
     async def test_api_versions(self):
         """It's possible to query for API versions."""
         session = FakeSession(
-            responses=[make_sync_response(['/1.0', '/2.0'])])
+            responses=[make_response_content(['/1.0', '/2.0'])])
         self.remote._session_factory = lambda connector=None: session
 
         async with self.remote:
@@ -177,7 +191,7 @@ class RemoteTests(LoopTestCase):
     async def test_info(self):
         """It's possible to query for server information."""
         info = {'api_extensions': ['ext1', 'ext2'], 'api_version': '1.0'}
-        session = FakeSession(responses=[make_sync_response(info)])
+        session = FakeSession(responses=[make_response_content(info)])
         self.remote._session_factory = lambda connector=None: session
 
         async with self.remote:
@@ -190,7 +204,7 @@ class RemoteTests(LoopTestCase):
     async def test_resources(self):
         """It's possible to query for server resources."""
         resources = {'memory': {'total': 100, 'used': 50}}
-        session = FakeSession(responses=[make_sync_response(resources)])
+        session = FakeSession(responses=[make_response_content(resources)])
         self.remote._session_factory = lambda connector=None: session
 
         async with self.remote:
@@ -206,7 +220,7 @@ class RemoteTests(LoopTestCase):
         info = {
             'config': {'core.https_address': '[]:8443'},
             'api_version': '1.0'}
-        session = FakeSession(responses=[make_sync_response(info)])
+        session = FakeSession(responses=[make_response_content(info)])
         self.remote._session_factory = lambda connector=None: session
 
         async with self.remote:
@@ -219,7 +233,7 @@ class RemoteTests(LoopTestCase):
     async def test_config_update(self):
         """It's possible to update the server configuration."""
         options = {'core.https_address': '[]:8443'}
-        session = FakeSession(responses=[make_sync_response({})])
+        session = FakeSession(responses=[make_response_content({})])
         self.remote._session_factory = lambda connector=None: session
         async with self.remote:
             await self.remote.config(options=options)
@@ -231,7 +245,7 @@ class RemoteTests(LoopTestCase):
     async def test_config_replace(self):
         """It's possible to replace the server configuration."""
         options = {'core.https_address': '[]:8443'}
-        session = FakeSession(responses=[make_sync_response({})])
+        session = FakeSession(responses=[make_response_content({})])
         self.remote._session_factory = lambda connector=None: session
         async with self.remote:
             await self.remote.config(options=options, replace=True)
