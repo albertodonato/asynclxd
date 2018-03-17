@@ -14,14 +14,12 @@ class Image(Resource):
     async def secret(self):
         """Create a secret for this image."""
         response = await self._remote.request('POST', self._uri('secret'))
-        from .operations import Operation
-        return Operation.from_response(self._remote, response)
+        return response.operation
 
     async def refresh(self):
         """Refresh a image."""
         response = await self._remote.request('POST', self._uri('refresh'))
-        from .operations import Operation
-        return Operation.from_response(self._remote, response)
+        return response.operation
 
 
 class Images(ResourceCollection):

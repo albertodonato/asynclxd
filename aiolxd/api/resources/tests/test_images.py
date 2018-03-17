@@ -10,10 +10,12 @@ class ImageTest(LoopTestCase):
 
     async def test_secret(self):
         """The secret() call returns an operation with a secret."""
+        remote = FakeRemote()
         metadata = {'some': 'details'}
-        response = Response(
-            202, {'Location': '/operations/op'}, {'metadata': metadata})
-        remote = FakeRemote(responses=[response])
+        remote.responses.append(
+            Response(
+                remote, 202, {'Location': '/operations/op'},
+                {'metadata': metadata}))
         image = Image(remote, '/images/i')
         operation = await image.secret()
         self.assertIsInstance(operation, Operation)
@@ -25,10 +27,12 @@ class ImageTest(LoopTestCase):
 
     async def test_refresh(self):
         """The refresh() call returns an operation for updating an image."""
+        remote = FakeRemote()
         metadata = {'some': 'details'}
-        response = Response(
-            202, {'Location': '/operations/op'}, {'metadata': metadata})
-        remote = FakeRemote(responses=[response])
+        remote.responses.append(
+            Response(
+                remote, 202, {'Location': '/operations/op'},
+                {'metadata': metadata}))
         image = Image(remote, '/images/i')
         operation = await image.refresh()
         self.assertIsInstance(operation, Operation)

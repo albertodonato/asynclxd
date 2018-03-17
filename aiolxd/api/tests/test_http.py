@@ -10,6 +10,7 @@ from ..http import (
     Response,
     ResponseError,
 )
+from ..resources.operations import Operation
 from ..testing import (
     FakeRemote,
     FakeSession,
@@ -135,6 +136,22 @@ class ResponseTests(LoopTestCase):
         self.assertEqual(response.type, 'raw')
         self.assertIsNone(response.metadata)
         self.assertIs(response._content, content)
+
+    def test_operation_not_async(self):
+        """If the response is sync, the operation is None."""
+        content = {'type': 'sync', 'metadata': {'some': 'content'}}
+        response = Response(FakeRemote(), 200, {}, content)
+        self.assertIsNone(response.operation)
+
+    def test_operation_async(self):
+        """If the response is async, the operation is defined."""
+        metadata = {'some': 'details'}
+        response = Response(
+            FakeRemote(), 202, {'Location': '/operations/op'},
+            {'metadata': metadata})
+        self.assertIsInstance(response.operation, Operation)
+        self.assertEqual(response.operation.uri, '/operations/op')
+        self.assertEqual(response.operation.details(), metadata)
 
     async def test_write_content(self):
         """Response binary content can be written to file."""

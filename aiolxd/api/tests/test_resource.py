@@ -67,10 +67,11 @@ class ResourceCollectionTests(LoopTestCase):
 
     async def test_create(self):
         """The create method returns a new instance of resource."""
+        remote = FakeRemote()
         response = Response(
-            201, {'ETag': 'abcde', 'Location': '/resources/new'},
+            remote, 201, {'ETag': 'abcde', 'Location': '/resources/new'},
             {'resource': 'details'})
-        remote = FakeRemote(responses=[response])
+        remote.responses.append(response)
         collection = SampleResourceCollection(remote)
         resource = await collection.create({'some': 'data'})
         self.assertEqual(resource.uri, '/resources/new')
@@ -403,8 +404,9 @@ class NamedResourceTests(LoopTestCase):
 
     async def test_rename(self):
         """A named resource can be renamed."""
-        remote = FakeRemote(
-            responses=[Response(204, {'Location': '/new-resource'}, {})])
+        remote = FakeRemote()
+        response = Response(remote, 204, {'Location': '/new-resource'}, {})
+        remote.responses.append(response)
         resource = NamedResource(remote, '/resource')
         resource._details = {'some': 'detail'}
         response = await resource.rename('new-resource')

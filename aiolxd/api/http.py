@@ -17,6 +17,8 @@ class ContentStream(ABC):
 
 ContentStream.register(StreamReader)
 
+from .resources.operations import Operation
+
 
 class Response:
     """An response to an API request.
@@ -44,6 +46,16 @@ class Response:
         else:
             self.type = content.get('type')
             self.metadata = content.get('metadata', {})
+
+    @property
+    def operation(self):
+        """Return the background operation from this response, if async."""
+        if self.type != 'async' and not self.location:
+            return None
+
+        operation = Operation(self._remote, self.location)
+        operation.update_details(self.metadata)
+        return operation
 
     async def write_content(self, stream):
         """Write the response payload to the specified stream.
