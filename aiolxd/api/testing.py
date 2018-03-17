@@ -1,10 +1,17 @@
-"""API testing helpers"""
+"""API testing helpers."""
+
+import io
+
+from aiohttp import ClientResponse
+from json import dumps as json_dumps
+from multidict import CIMultiDict
+from yarl import URL
 
 from .http import Response
 
 
 class FakeRemote:
-    """A fake Remote class"""
+    """A fake Remote class."""
 
     version = '1.0'
 
@@ -18,7 +25,7 @@ class FakeRemote:
         response = self.responses.pop(0)
         if isinstance(response, Response):
             return response
-        return Response(200, {}, make_sync_response(response))
+        return Response(self, 200, {}, make_sync_response(response))
 
 
 class FakeSession:
@@ -35,22 +42,41 @@ class FakeSession:
         if data:
             content = data.read()
         self.calls.append((method, path, params, headers, content))
-        return FakeHTTPResponse(self.responses.pop(0))
+        response_content = self.responses.pop(0)
+        if isinstance(response_content, ClientResponse):
+            return response_content
+        return make_http_response(
+            method=method, url=path, content=response_content)
 
     async def close(self):
         pass
 
 
-class FakeHTTPResponse:
-    """A fake HTTP response."""
+def make_http_response(status=200, reason='OK', method='GET', url='/',
+                       content=None):
+    response = ClientResponse(method, URL(url))
+    response.status = status
+    response.reason = reason
+    response.headers = CIMultiDict()
+    if isinstance(content, io.IOBase):
+        response._content = content.read()
+    elif content is not None:
+        response._content = json_dumps(content).encode('utf8')
+        response.headers['Content-Type'] = 'application/json'
+    return response
 
-    def __init__(self, content, status=200, headers=None):
-        self.status = status
-        self.headers = headers or {}
-        self.content = content
 
-    async def json(self):
-        return self.content
+def make_error_response(error, code=400, http_status=None):
+    """Return an API error with the specified message and code."""
+    content = {
+        'type': 'error',
+        'error': error,
+        'error_code': code,
+        'metadata': {}}
+    if http_status is None:
+        http_status = code
+    return make_http_response(
+        status=http_status, reason='Failure', content=content)
 
 
 def make_resource(resource_class, uri='/resource', etag=None, details=None):
@@ -68,12 +94,3 @@ def make_sync_response(metadata=None):
         'status': 'Success',
         'status_code': 200,
         'metadata': metadata or {}}
-
-
-def make_error_response(error, code=400):
-    """Return an API error with the specified message and code."""
-    return {
-        'type': 'error',
-        'error': error,
-        'error_code': code,
-        'metadata': {}}

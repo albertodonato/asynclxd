@@ -1,26 +1,39 @@
 """Perform requests to the API."""
 
+from io import IOBase
 import os
 from pathlib import Path
 from pprint import pformat
 
+from aiohttp import ClientResponseError
+
 
 class Response:
-    """An API response.
+    """An response to an API request.
 
+    :param aiolxd.remote.Remote remote: the remote that returned the response.
     :param int http_code: the HTTP response code.
-    :param str etag: if included in the response, the Etag header.
-    :param str location: if included in the response, the Location header.
-    :param content: the JSON-decoded response content.
+    :param dict headers: headers from the HTTP response.
+    :param content: the JSON-decoded response content or a stream with the
+        binary response content.
 
     """
 
-    def __init__(self, http_code, http_headers, content):
+    metadata = None
+
+    _content = None
+
+    def __init__(self, remote, http_code, headers, content):
+        self._remote = remote
         self.http_code = http_code
-        self.etag = http_headers.get('ETag')
-        self.location = http_headers.get('Location')
-        self.type = content.get('type')
-        self.metadata = content.get('metadata', {})
+        self.etag = headers.get('ETag')
+        self.location = headers.get('Location')
+        if isinstance(content, IOBase):
+            self._content = content
+            self.type = 'raw'
+        else:
+            self.type = content.get('type')
+            self.metadata = content.get('metadata', {})
 
     def pprint(self):
         """Pretty-print the response.
@@ -83,9 +96,17 @@ async def request(session, method, path, params=None, headers=None,
         data=upload)
     if upload:
         upload.close()
-    content = await response.json()
-    error_code = content.get('error_code')
-    if error_code:
-        raise ResponseError(error_code, content.get('error'))
 
-    return Response(response.status, response.headers, content)
+    # check if the request failed
+    try:
+        response.raise_for_status()
+    except ClientResponseError as error:
+        error_code = error.code
+        error_mesg = error.message
+        if error.headers.get('Content-Type') == 'application/json':
+            content = await response.json()
+            error_code = content['error_code']
+            error_mesg = content["error"]
+        raise ResponseError(error_code, error_mesg)
+
+    return response
