@@ -17,6 +17,12 @@ class Image(Resource):
         from .operations import Operation
         return Operation.from_response(self._remote, response)
 
+    async def refresh(self):
+        """Refresh a image."""
+        response = await self._remote.request('POST', self._uri('refresh'))
+        from .operations import Operation
+        return Operation.from_response(self._remote, response)
+
 
 class Images(ResourceCollection):
     """Images collection API methods."""

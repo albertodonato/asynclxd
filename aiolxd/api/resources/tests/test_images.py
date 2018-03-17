@@ -19,3 +19,21 @@ class ImageTest(LoopTestCase):
         self.assertIsInstance(operation, Operation)
         self.assertEqual(operation.uri, '/operations/op')
         self.assertEqual(operation.details(), {'some': 'details'})
+        self.assertEqual(
+            remote.calls,
+            [(('POST', '/images/i/secret', None, None, None, None))])
+
+    async def test_refresh(self):
+        """The refresh() call returns an operation for updating an image."""
+        metadata = {'some': 'details'}
+        response = Response(
+            202, {'Location': '/operations/op'}, {'metadata': metadata})
+        remote = FakeRemote(responses=[response])
+        image = Image(remote, '/images/i')
+        operation = await image.refresh()
+        self.assertIsInstance(operation, Operation)
+        self.assertEqual(operation.uri, '/operations/op')
+        self.assertEqual(operation.details(), {'some': 'details'})
+        self.assertEqual(
+            remote.calls,
+            [(('POST', '/images/i/refresh', None, None, None, None))])
