@@ -159,9 +159,7 @@ class Resource(metaclass=abc.ABCMeta):
 
     async def read(self):
         """Return details for this resource."""
-        response = await self._remote.request('GET', self.uri)
-        self._process_response(response)
-        return response
+        return await self._read()
 
     async def update(self, details, etag=True):
         """Update resource details.
@@ -188,6 +186,17 @@ class Resource(metaclass=abc.ABCMeta):
     async def delete(self):
         """Delete this resource."""
         return await self._remote.request('DELETE', self.uri)
+
+    async def _read(self, params=None):
+        """Return details for the resource.
+
+        :param dict params: an optional dict with query string parameters for
+            the request.
+
+        """
+        response = await self._remote.request('GET', self.uri, params=params)
+        self._process_response(response)
+        return response
 
     def _uri(self, path):
         """Return a URI below the resource URI."""

@@ -8,6 +8,15 @@ from ...testing import FakeRemote
 
 class ImageTest(LoopTestCase):
 
+    async def test_read_with_secret(self):
+        """It's possible to pass a secret to the read operation."""
+        remote = FakeRemote(responses=['some response'])
+        image = Image(remote, '/images/i')
+        await image.read(secret='abc')
+        self.assertEqual(
+            remote.calls,
+            [(('GET', '/images/i', {'secret': 'abc'}, None, None, None))])
+
     async def test_secret(self):
         """The secret() call returns an operation with a secret."""
         remote = FakeRemote()
