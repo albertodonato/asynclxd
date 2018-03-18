@@ -100,6 +100,9 @@ class ResourceCollection(metaclass=abc.ABCMeta):
     def _resource_from_details(self, details):
         """Return a resource instance from its details."""
         resource_id = details[self.resource_class.id_attribute]
+        # if the ID contains slashes, it's a subresource whose ID contains the
+        # parent resource ID (such as for snapshots); drop the prefix
+        resource_id = resource_id.split('/')[-1]
         resource = self.resource_class(
             self._remote, self._resource_uri(resource_id))
         resource.update_details(details)

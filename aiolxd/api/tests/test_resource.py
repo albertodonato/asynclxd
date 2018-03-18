@@ -169,6 +169,14 @@ class ResourceCollectionTests(AsyncTestCase):
         self.assertEqual(resource2.uri, '/resources/two')
         self.assertEqual(resource2.details(), {'id': 'two', 'value': 2})
 
+    async def test_recursion_id_with_slashes(self):
+        """If the resource ID contains slashes, the prefix is dropped."""
+        remote = FakeRemote(responses=[[{'id': 'res/subres'}]])
+        collection = SampleResourceCollection(remote, '/resources')
+        [resource] = await collection.read(recursion=True)
+        self.assertEqual(resource.uri, '/resources/subres')
+        self.assertEqual(resource.details(), {'id': 'res/subres'})
+
     async def test_read_raw(self):
         """The read method returns the raw response if raw=True."""
         remote = FakeRemote(responses=[['/resources/one', '/resources/two']])
