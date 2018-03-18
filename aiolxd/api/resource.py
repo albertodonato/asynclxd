@@ -11,31 +11,45 @@ from urllib.parse import (
 class Collection:
     """Property to wrap an ResourceCollection."""
 
+    #: The name of the attribute for the collection in the owner
+    name = ''
+
     def __init__(self, resource_collection):
         self.resource_collection = resource_collection
 
-    def __get__(self, obj, cls=None):
-        return self.resource_collection(obj._remote)
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, instance, owner):
+        base_uri = getattr(instance, 'resource_uri', None)
+        if not base_uri:
+            base_uri = instance.uri
+        uri = '{uri}/{name}'.format(uri=base_uri, name=self.name)
+        return self.resource_collection(instance._remote, uri)
 
 
 class ResourceCollection(metaclass=abc.ABCMeta):
     """A collection for API resources of a type."""
 
-    uri_name = abc.abstractproperty(doc='Name of the collection in the API')
     resource_class = abc.abstractproperty(doc='Class for returned resources')
 
-    def __init__(self, remote, raw=False):
+    def __init__(self, remote, uri, raw=False):
         self._remote = remote
+        self.uri = uri
         self._raw = raw
+
+    def __repr__(self):
+        return '{cls}({uri!r})'.format(
+            cls=self.__class__.__name__, uri=self.uri)
 
     def raw(self):
         """Return a copy of this collection which returns raw responses."""
-        return self.__class__(self._remote, raw=True)
+        return self.__class__(self._remote, self.uri, raw=True)
 
     async def create(self, details):
         """Create a new resource in the collection."""
         response = await self._remote.request(
-            'POST', self._uri(), content=details)
+            'POST', self.uri, content=details)
         return self.resource_class(self._remote, response.location)
 
     async def get(self, id):
@@ -44,7 +58,7 @@ class ResourceCollection(metaclass=abc.ABCMeta):
         This performs a :data:`GET` call to fetch resource details.
 
         """
-        resource = self.resource_class(self._remote, self._uri(id=id))
+        resource = self.resource_class(self._remote, self._resource_uri(id))
         await resource.read()
         return resource
 
@@ -56,8 +70,7 @@ class ResourceCollection(metaclass=abc.ABCMeta):
 
         """
         params = {'recursion': 1} if recursion else None
-        response = await self._remote.request(
-            'GET', self._uri(), params=params)
+        response = await self._remote.request('GET', self.uri, params=params)
         content = response.metadata
         if self._raw:
             return content
@@ -82,16 +95,14 @@ class ResourceCollection(metaclass=abc.ABCMeta):
     def _resource_from_details(self, details):
         """Return a resource instance from its details."""
         resource_id = details[self.resource_class.id_attribute]
-        resource = self.resource_class(self._remote, self._uri(id=resource_id))
+        resource = self.resource_class(
+            self._remote, self._resource_uri(resource_id))
         resource.update_details(details)
         return resource
 
-    def _uri(self, id=None):
-        uri = '/{version}/{uri_name}'.format(
-            version=self._remote.version, uri_name=self.uri_name)
-        if id:
-            uri += '/{id}'.format(id=quote(id))
-        return uri
+    def _resource_uri(self, resource_id):
+        return '{uri}/{resource_id}'.format(
+            uri=self.uri, resource_id=quote(resource_id))
 
 
 class Resource(metaclass=abc.ABCMeta):

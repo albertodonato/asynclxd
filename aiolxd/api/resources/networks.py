@@ -13,5 +13,4 @@ class Network(NamedResource):
 class Networks(ResourceCollection):
     """Networks collection API methods."""
 
-    uri_name = 'networks'
     resource_class = Network

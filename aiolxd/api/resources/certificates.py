@@ -15,5 +15,4 @@ class Certificate(Resource):
 class Certificates(ResourceCollection):
     """Certificates collection API methods."""
 
-    uri_name = 'certificates'
     resource_class = Certificate

@@ -18,5 +18,4 @@ class Profile(NamedResource):
 class Profiles(ResourceCollection):
     """Profiles collection API methods."""
 
-    uri_name = 'profiles'
     resource_class = Profile

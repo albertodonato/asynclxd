@@ -30,7 +30,6 @@ class SampleResourceWithRelated(SampleResource):
 
 class SampleResourceCollection(ResourceCollection):
 
-    uri_name = 'sample-resource'
     resource_class = SampleResource
 
 
@@ -41,27 +40,59 @@ class CollectionTests(TestCase):
 
         class SampleCollection:
 
-            def __init__(self, remote):
+            def __init__(self, remote, uri):
                 self.remote = remote
+                self.uri = uri
 
         class SampleRemote:
 
             collection = Collection(SampleCollection)
 
             def __init__(self):
+                self.resource_uri = '/1.0'
                 self._remote = self
 
         remote = SampleRemote()
         collection = remote.collection
         self.assertIsInstance(collection, SampleCollection)
         self.assertIs(collection.remote, remote)
+        self.assertEqual(collection.uri, '/1.0/collection')
+
+    def test_read_uri(self):
+        """If the  owner doesn't define `resource_uri`, `uri` is used."""
+
+        class SampleCollection:
+
+            def __init__(self, remote, uri):
+                self.remote = remote
+                self.uri = uri
+
+        class SampleRemote:
+
+            collection = Collection(SampleCollection)
+
+            def __init__(self):
+                self.uri = '/1.0'
+                self._remote = self
+
+        remote = SampleRemote()
+        collection = remote.collection
+        self.assertIsInstance(collection, SampleCollection)
+        self.assertIs(collection.remote, remote)
+        self.assertEqual(collection.uri, '/1.0/collection')
 
 
 class ResourceCollectionTests(AsyncTestCase):
 
+    def test_repr(self):
+        """The object repr contains the URI."""
+        resource = SampleResourceCollection(FakeRemote(), '/resources')
+        self.assertEqual(
+            repr(resource), "SampleResourceCollection('/resources')")
+
     def test_raw(self):
         """The raw method returns a collection with raw attribute set."""
-        collection = SampleResourceCollection(FakeRemote())
+        collection = SampleResourceCollection(FakeRemote(), '/resources')
         self.assertFalse(collection._raw)
         self.assertTrue(collection.raw()._raw)
 
@@ -72,14 +103,14 @@ class ResourceCollectionTests(AsyncTestCase):
             remote, 201, {'ETag': 'abcde', 'Location': '/resources/new'},
             {'resource': 'details'})
         remote.responses.append(response)
-        collection = SampleResourceCollection(remote)
+        collection = SampleResourceCollection(remote, '/resources')
         resource = await collection.create({'some': 'data'})
         self.assertEqual(resource.uri, '/resources/new')
 
     async def test_read(self):
         """The read method returns instances of the resource object."""
         remote = FakeRemote(responses=[['/resources/one', '/resources/two']])
-        collection = SampleResourceCollection(remote)
+        collection = SampleResourceCollection(remote, '/resources')
         self.assertEqual(
             await collection.read(),
             [SampleResource(remote, '/resources/one'),
@@ -88,7 +119,7 @@ class ResourceCollectionTests(AsyncTestCase):
     async def test_read_process_content_override(self):
         """It's possible to further process details from the call result."""
         remote = FakeRemote(responses=[['/resources/one', '/resources/two']])
-        collection = SampleResourceCollection(remote)
+        collection = SampleResourceCollection(remote, '/resources')
 
         def process_content(content):
             return ['/new' + entry for entry in content]
@@ -103,34 +134,34 @@ class ResourceCollectionTests(AsyncTestCase):
         """The read method returns resources with details if recursive."""
         remote = FakeRemote(
             responses=[[{'id': 'one', 'value': 1}, {'id': 'two', 'value': 2}]])
-        collection = SampleResourceCollection(remote)
+        collection = SampleResourceCollection(remote, '/resources')
         resource1, resource2 = await collection.read(recursion=True)
-        self.assertEqual(resource1.uri, '/1.0/sample-resource/one')
+        self.assertEqual(resource1.uri, '/resources/one')
         self.assertEqual(resource1.details(), {'id': 'one', 'value': 1})
-        self.assertEqual(resource2.uri, '/1.0/sample-resource/two')
+        self.assertEqual(resource2.uri, '/resources/two')
         self.assertEqual(resource2.details(), {'id': 'two', 'value': 2})
 
     async def test_read_raw(self):
         """The read method returns the raw response if raw=True."""
         remote = FakeRemote(responses=[['/resources/one', '/resources/two']])
-        collection = SampleResourceCollection(remote, raw=True)
+        collection = SampleResourceCollection(remote, '/resources', raw=True)
         self.assertEqual(
             await collection.read(), ['/resources/one', '/resources/two'])
 
     async def test_get(self):
         """The get method returns a single resource, reading its details."""
         remote = FakeRemote(responses=[{'some': 'details'}])
-        collection = SampleResourceCollection(remote)
+        collection = SampleResourceCollection(remote, '/resources')
         resource = await collection.get('a-resource')
-        self.assertEqual(resource.uri, '/1.0/sample-resource/a-resource')
+        self.assertEqual(resource.uri, '/resources/a-resource')
         self.assertEqual(resource.details(), {'some': 'details'})
 
     async def test_get_quoted_uri(self):
         """The get method quotes quotes special chars in the resource URI."""
         remote = FakeRemote(responses=[{'some': 'details'}])
-        collection = SampleResourceCollection(remote)
+        collection = SampleResourceCollection(remote, '/resources')
         resource = await collection.get('a resource')
-        self.assertEqual(resource.uri, '/1.0/sample-resource/a%20resource')
+        self.assertEqual(resource.uri, '/resources/a%20resource')
 
 
 class ResourceTests(AsyncTestCase):

@@ -101,6 +101,11 @@ class Remote(Loggable):
     async def __aexit__(self, exc_type, exc, tb):
         await self.close()
 
+    @property
+    def resource_uri(self):
+        """Return the URI for the base resource of the Remote."""
+        return '/{version}'.format(version=self.version)
+
     def open(self):
         """Start a session with the remote."""
         if self._session:

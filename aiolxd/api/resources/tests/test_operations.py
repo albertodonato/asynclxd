@@ -58,7 +58,7 @@ class OperationsTests(TestCase):
         remote = FakeRemote(responses=[
             {'running': ['/operations/one', '/operations/two'],
              'queued': ['/operations/three']}])
-        collection = Operations(remote)
+        collection = Operations(remote, '/operations')
         self.assertEqual(
             await collection.read(),
             [Operation(remote, '/operations/one'),

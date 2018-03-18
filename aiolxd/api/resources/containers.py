@@ -13,5 +13,4 @@ class Container(NamedResource):
 class Containers(ResourceCollection):
     """Containers collection API methods."""
 
-    uri_name = 'containers'
     resource_class = Container

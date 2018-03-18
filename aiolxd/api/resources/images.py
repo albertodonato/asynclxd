@@ -35,5 +35,4 @@ class Image(Resource):
 class Images(ResourceCollection):
     """Images collection API methods."""
 
-    uri_name = 'images'
     resource_class = Image

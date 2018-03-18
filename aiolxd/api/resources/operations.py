@@ -18,7 +18,7 @@ class Operation(Resource):
     related_resources = frozenset([
         (('resources', 'containers'), Container),
         (('resources', 'images'), Image)
-        # XXX add "cluster" once resources is supported
+        # XXX add "cluster" once cluster resources are supported
     ])
 
     async def wait(self, timeout=None):
@@ -32,7 +32,6 @@ class Operation(Resource):
 class Operations(ResourceCollection):
     """Operations collection API methods."""
 
-    uri_name = 'operations'
     resource_class = Operation
 
     def _process_content(self, content):

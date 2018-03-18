@@ -31,6 +31,10 @@ class RemoteTests(TestCase, TestWithFixtures):
         self.assertEqual(
             repr(self.remote), "Remote('https://example.com:8443/')")
 
+    def test_resource_uri(self):
+        """THe resource_uri property returns the base resource URI."""
+        self.assertEqual(self.remote.resource_uri, '/1.0')
+
     async def test_context_manager(self):
         """A session is created when using the class as context manager."""
         self.remote._session_factory = FakeSession
