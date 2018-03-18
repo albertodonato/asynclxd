@@ -50,7 +50,7 @@ class Response:
     @property
     def operation(self):
         """Return the background operation from this response, if async."""
-        if self.type != 'async' and not self.location:
+        if self.type != 'async':
             return None
 
         operation = Operation(self._remote, self.location)

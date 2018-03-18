@@ -146,10 +146,10 @@ class ResponseTests(TestCase):
 
     def test_operation_async(self):
         """If the response is async, the operation is defined."""
-        metadata = {'some': 'details'}
+        metadata = {'some': 'content'}
         response = Response(
             FakeRemote(), 202, {'Location': '/operations/op'},
-            {'metadata': metadata})
+            {'type': 'async', 'metadata': metadata})
         self.assertIsInstance(response.operation, Operation)
         self.assertEqual(response.operation.uri, '/operations/op')
         self.assertEqual(response.operation.details(), metadata)

@@ -10,6 +10,7 @@ from ..resource import (
     ResourceCollection,
     Resource,
 )
+from ..resources.operations import Operation
 from ..testing import (
     FakeRemote,
     make_resource,
@@ -101,21 +102,38 @@ class ResourceCollectionTests(AsyncTestCase):
         remote = FakeRemote()
         response = Response(
             remote, 201, {'ETag': 'abcde', 'Location': '/resources/new'},
-            {'metadata': {'resource': 'details'}})
+            {'type': 'sync', 'metadata': {'resource': 'details'}})
         remote.responses.append(response)
         collection = SampleResourceCollection(remote, '/resources')
         resource = await collection.create({'some': 'data'})
+        self.assertIsInstance(resource, SampleResource)
         self.assertEqual(resource.uri, '/resources/new')
 
     async def test_create_raw(self):
         """The create method returns raw response metadata if raw=True."""
         metadata = {'resource': 'details'}
         remote = FakeRemote()
-        response = Response(remote, 201, {}, {'metadata': metadata})
+        response = Response(
+            remote, 201, {'ETag': 'abcde', 'Location': '/resources/new'},
+            {'type': 'sync', 'metadata': metadata})
         remote.responses.append(response)
         collection = SampleResourceCollection(remote, '/resources', raw=True)
         result = await collection.create({'some': 'data'})
         self.assertEqual(result, metadata)
+
+    async def test_create_async(self):
+        """If the create response is async, the operation is returned."""
+        metadata = {'resource': 'details'}
+        remote = FakeRemote()
+        response = Response(
+            remote, 201, {'ETag': 'abcde', 'Location': '/operations/op'},
+            {'type': 'async', 'metadata': metadata})
+        remote.responses.append(response)
+        collection = SampleResourceCollection(remote, '/resources')
+        operation = await collection.create({'some': 'data'})
+        self.assertIsInstance(operation, Operation)
+        self.assertEqual(operation.uri, '/operations/op')
+        self.assertEqual(operation.details(), metadata)
 
     async def test_read(self):
         """The read method returns instances of the resource object."""

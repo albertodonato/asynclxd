@@ -52,6 +52,9 @@ class ResourceCollection(metaclass=abc.ABCMeta):
             'POST', self.uri, content=details)
         if self._raw:
             return response.metadata
+        if response.operation:
+            # the creation operation is async
+            return response.operation
         return self.resource_class(self._remote, response.location)
 
     async def get(self, id):

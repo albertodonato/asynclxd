@@ -24,7 +24,7 @@ class ImageTest(TestCase):
         remote.responses.append(
             Response(
                 remote, 202, {'Location': '/operations/op'},
-                {'metadata': metadata}))
+                {'type': 'async', 'metadata': metadata}))
         image = Image(remote, '/images/i')
         operation = await image.secret()
         self.assertIsInstance(operation, Operation)
@@ -41,7 +41,7 @@ class ImageTest(TestCase):
         remote.responses.append(
             Response(
                 remote, 202, {'Location': '/operations/op'},
-                {'metadata': metadata}))
+                {'type': 'async', 'metadata': metadata}))
         image = Image(remote, '/images/i')
         operation = await image.refresh()
         self.assertIsInstance(operation, Operation)
