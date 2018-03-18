@@ -101,11 +101,21 @@ class ResourceCollectionTests(AsyncTestCase):
         remote = FakeRemote()
         response = Response(
             remote, 201, {'ETag': 'abcde', 'Location': '/resources/new'},
-            {'resource': 'details'})
+            {'metadata': {'resource': 'details'}})
         remote.responses.append(response)
         collection = SampleResourceCollection(remote, '/resources')
         resource = await collection.create({'some': 'data'})
         self.assertEqual(resource.uri, '/resources/new')
+
+    async def test_create_raw(self):
+        """The create method returns raw response metadata if raw=True."""
+        metadata = {'resource': 'details'}
+        remote = FakeRemote()
+        response = Response(remote, 201, {}, {'metadata': metadata})
+        remote.responses.append(response)
+        collection = SampleResourceCollection(remote, '/resources', raw=True)
+        result = await collection.create({'some': 'data'})
+        self.assertEqual(result, metadata)
 
     async def test_read(self):
         """The read method returns instances of the resource object."""

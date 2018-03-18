@@ -50,6 +50,8 @@ class ResourceCollection(metaclass=abc.ABCMeta):
         """Create a new resource in the collection."""
         response = await self._remote.request(
             'POST', self.uri, content=details)
+        if self._raw:
+            return response.metadata
         return self.resource_class(self._remote, response.location)
 
     async def get(self, id):
