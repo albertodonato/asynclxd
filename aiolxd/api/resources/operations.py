@@ -1,4 +1,4 @@
-"""API resources for asynchronous operations.."""
+"""API resources for asynchronous operations."""
 
 from itertools import chain
 

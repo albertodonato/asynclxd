@@ -12,7 +12,7 @@ from ...testing import FakeRemote
 class OperationTest(TestCase):
 
     def test_related_resources(self):
-        """Related resources are returned as instances.."""
+        """Related resources are returned as instances."""
         details = {
             'resources': {
                 'containers': ['/containers/c'],

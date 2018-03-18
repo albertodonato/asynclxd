@@ -18,10 +18,19 @@ class Aliases(ResourceCollection):
     resource_class = Alias
 
 
+def related_aliases(remote, details):
+    """Factory returning Alias instance from details."""
+    return remote.images.aliases.resource_from_details(details)
+
+
 class Image(Resource):
     """API resouce for images."""
 
     id_attribute = 'fingerprint'
+
+    related_resources = frozenset([
+        (('aliases',), related_aliases),
+    ])
 
     async def read(self, secret=None):
         """Return image details.

@@ -12,9 +12,23 @@ from ...testing import FakeRemote
 
 class ImageTest(TestCase):
 
+    async def test_related_resources(self):
+        """Related resources are returned as instances."""
+        alias_details = {'name': 'a', 'description': 'an alias'}
+        details = {'aliases': [alias_details]}
+        remote = FakeRemote()
+        # add the images collection
+        remote.images = Images(remote, '/images')
+        image = Image(remote, '/images/i')
+        image.update_details(details)
+        [alias] = image['aliases']
+        self.assertIsInstance(alias, Alias)
+        self.assertEqual(alias.uri, '/images/aliases/a')
+        self.assertEqual(alias.details(), alias_details)
+
     async def test_read_with_secret(self):
         """It's possible to pass a secret to the read operation."""
-        remote = FakeRemote(responses=['some response'])
+        remote = FakeRemote(responses=[{'some': 'details'}])
         image = Image(remote, '/images/i')
         await image.read(secret='abc')
         self.assertEqual(

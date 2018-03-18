@@ -82,9 +82,16 @@ class ResourceCollection(metaclass=abc.ABCMeta):
 
         content = self._process_content(content)
         if recursion:
-            return [
-                self._resource_from_details(details) for details in content]
+            return [self.resource_from_details(details) for details in content]
         return [self.resource_class(self._remote, uri) for uri in content]
+
+    def resource_from_details(self, details):
+        """Return an instance of a resource for the collection from details."""
+        resource_id = self.resource_class.id_from_details(details)
+        resource = self.resource_class(
+            self._remote, self._resource_uri(resource_id))
+        resource.update_details(details)
+        return resource
 
     def _process_content(self, content):
         """Process metadata content before creating resources.
@@ -96,14 +103,6 @@ class ResourceCollection(metaclass=abc.ABCMeta):
 
         """
         return content
-
-    def _resource_from_details(self, details):
-        """Return a resource instance from its details."""
-        resource_id = self.resource_class.id_from_details(details)
-        resource = self.resource_class(
-            self._remote, self._resource_uri(resource_id))
-        resource.update_details(details)
-        return resource
 
     def _resource_uri(self, resource_id):
         return '{uri}/{resource_id}'.format(
@@ -118,8 +117,10 @@ class Resource(metaclass=abc.ABCMeta):
         doc='Attribute that uniquely identifies the resource')
 
     #: If defined, a sequence of 2-tuples with a tuple of strings identifying a
-    # key in resource details and a resource class. Values for the keys are
-    # returned as instances of the resource class.
+    # key in resource details and a resource factory. The factory can be a
+    # resource subclass (when details are just the resource URI) or a callable
+    # which is called with the remote and resource details.  Values for the
+    # keys are returned as instances of the resource class.
     related_resources = None
 
     _last_etag = None
@@ -239,11 +240,11 @@ class Resource(metaclass=abc.ABCMeta):
         self._details = deepcopy(response.metadata)
 
     def _set_related_resources(self, metadata):
-        """Convert related resoruces URIs to resource instances."""
+        """Convert related resoruces to resource instances."""
         if not self.related_resources or not metadata:
             return
 
-        for keys, resource_class in self.related_resources:
+        for keys, resource_factory in self.related_resources:
             entry = metadata
             # find the attriute in the response
             for key in keys:
@@ -253,8 +254,8 @@ class Resource(metaclass=abc.ABCMeta):
             if not entry:
                 continue
             # replace with resource instances
-            for i, resource_uri in enumerate(entry):
-                entry[i] = resource_class(self._remote, resource_uri)
+            for i, resource_entry in enumerate(entry):
+                entry[i] = resource_factory(self._remote, resource_entry)
 
 
 class NamedResource(Resource):

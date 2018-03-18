@@ -191,6 +191,15 @@ class ResourceCollectionTests(AsyncTestCase):
         resource = await collection.get('a resource')
         self.assertEqual(resource.uri, '/resources/a%20resource')
 
+    def test_resource_from_details(self):
+        """A resource instance can be returned from its details."""
+        details = {'id': 'res', 'some': 'detail'}
+        collection = SampleResourceCollection(FakeRemote(), '/resources')
+        resource = collection.resource_from_details(details)
+        self.assertIsInstance(resource, SampleResource)
+        self.assertEqual(resource.uri, '/resources/res')
+        self.assertEqual(resource.details(), details)
+
 
 class ResourceTests(AsyncTestCase):
 
@@ -328,7 +337,7 @@ class ResourceTests(AsyncTestCase):
         self.assertIsNone(resource.details())
 
     def test_details(self):
-        """If details are cached, details() returns them.."""
+        """If details are cached, details() returns them."""
         resource = make_resource(SampleResource, details={'some': 'detail'})
         self.assertEqual(resource.details(), {'some': 'detail'})
 
