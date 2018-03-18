@@ -57,13 +57,17 @@ class ResourceCollection(metaclass=abc.ABCMeta):
             return response.operation
         return self.resource_class(self._remote, response.location)
 
+    def get_resource(self, id):
+        """Return a resource with the specified ID."""
+        return self.resource_class(self._remote, self._resource_uri(id))
+
     async def get(self, id):
         """Return a single resource in the collection.
 
         This performs a :data:`GET` call to fetch resource details.
 
         """
-        resource = self.resource_class(self._remote, self._resource_uri(id))
+        resource = self.get_resource(id)
         await resource.read()
         return resource
 
@@ -245,17 +249,21 @@ class Resource(metaclass=abc.ABCMeta):
             return
 
         for keys, resource_factory in self.related_resources:
-            entry = metadata
+            parent_entry = entry = metadata
             # find the attriute in the response
             for key in keys:
+                parent_entry = entry
                 entry = entry.get(key)
                 if not entry:
                     break
             if not entry:
                 continue
             # replace with resource instances
-            for i, resource_entry in enumerate(entry):
-                entry[i] = resource_factory(self._remote, resource_entry)
+            if isinstance(entry, list):
+                for i, resource_entry in enumerate(entry):
+                    entry[i] = resource_factory(self._remote, resource_entry)
+            else:
+                parent_entry[key] = resource_factory(self._remote, entry)
 
 
 class NamedResource(Resource):

@@ -8,8 +8,17 @@ from ..resource import (
 )
 
 
+def _related_image(remote, fingerprint):
+    """Factory returning an Image instance from fingerprint."""
+    return remote.images.get_resource(fingerprint)
+
+
 class ImageAlias(NamedResource):
     """API resource for image aliases."""
+
+    related_resources = frozenset([
+        (('target',), _related_image),
+    ])
 
 
 class ImageAliases(ResourceCollection):
@@ -18,8 +27,8 @@ class ImageAliases(ResourceCollection):
     resource_class = ImageAlias
 
 
-def related_aliases(remote, details):
-    """Factory returning ImageAlias instance from details."""
+def _related_alias(remote, details):
+    """Factory returning an ImageAlias instance from details."""
     return remote.images.aliases.resource_from_details(details)
 
 
@@ -29,7 +38,7 @@ class Image(Resource):
     id_attribute = 'fingerprint'
 
     related_resources = frozenset([
-        (('aliases',), related_aliases),
+        (('aliases',), _related_alias),
     ])
 
     async def read(self, secret=None):

@@ -176,13 +176,27 @@ class ResourceCollectionTests(AsyncTestCase):
         self.assertEqual(
             await collection.read(), ['/resources/one', '/resources/two'])
 
+    def test_get_resource(self):
+        """The get_resource method returns a single resource."""
+        remote = FakeRemote()
+        collection = SampleResourceCollection(remote, '/resources')
+        resource = collection.get_resource('a-resource')
+        self.assertEqual(resource.uri, '/resources/a-resource')
+        # details have not been read
+        self.assertIsNone(resource.details())
+        self.assertEqual(remote.calls, [])
+
     async def test_get(self):
         """The get method returns a single resource, reading its details."""
         remote = FakeRemote(responses=[{'some': 'details'}])
         collection = SampleResourceCollection(remote, '/resources')
         resource = await collection.get('a-resource')
         self.assertEqual(resource.uri, '/resources/a-resource')
+        # details have been read
         self.assertEqual(resource.details(), {'some': 'details'})
+        self.assertEqual(
+            remote.calls,
+            [('GET', '/resources/a-resource', None, None, None, None)])
 
     async def test_get_quoted_uri(self):
         """The get method quotes quotes special chars in the resource URI."""

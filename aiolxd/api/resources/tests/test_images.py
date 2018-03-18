@@ -10,6 +10,20 @@ from ...http import Response
 from ...testing import FakeRemote
 
 
+class ImageAliasTest(TestCase):
+
+    async def test_related_resources(self):
+        """Related resources are returned as instances."""
+        remote = FakeRemote()
+        # add the images collection
+        remote.images = Images(remote, '/images')
+        alias = ImageAlias(remote, '/images/aliases/a')
+        alias.update_details({'name': 'a', 'target': 'img'})
+        image = alias['target']
+        self.assertIsInstance(image, Image)
+        self.assertEqual(image.uri, '/images/img')
+
+
 class ImageTest(TestCase):
 
     async def test_related_resources(self):
