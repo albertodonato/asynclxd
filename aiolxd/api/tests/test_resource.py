@@ -169,14 +169,6 @@ class ResourceCollectionTests(AsyncTestCase):
         self.assertEqual(resource2.uri, '/resources/two')
         self.assertEqual(resource2.details(), {'id': 'two', 'value': 2})
 
-    async def test_recursion_id_with_slashes(self):
-        """If the resource ID contains slashes, the prefix is dropped."""
-        remote = FakeRemote(responses=[[{'id': 'res/subres'}]])
-        collection = SampleResourceCollection(remote, '/resources')
-        [resource] = await collection.read(recursion=True)
-        self.assertEqual(resource.uri, '/resources/subres')
-        self.assertEqual(resource.details(), {'id': 'res/subres'})
-
     async def test_read_raw(self):
         """The read method returns the raw response if raw=True."""
         remote = FakeRemote(responses=[['/resources/one', '/resources/two']])
@@ -276,6 +268,22 @@ class ResourceTests(AsyncTestCase):
         """If the URI contains quoted chars, it's unquoted."""
         resource = SampleResource(FakeRemote(), '/resource/my%20resource')
         self.assertEqual(resource.id, 'my resource')
+
+    def test_id_from_details(self):
+        """The id_from_details method returns the ID of the resource."""
+        details = {'id': 'res', 'other': 'details'}
+        self.assertEqual(SampleResource.id_from_details(details), 'res')
+
+    def test_id_from_details_null_id_attribute(self):
+        """If id_attribute=None, id_from_details() raises an error."""
+
+        class SampleResourceWithNullIDAttribute(Resource):
+
+            id_attribute = None
+
+        self.assertRaises(
+            ValueError, SampleResourceWithNullIDAttribute.id_from_details,
+            {'some': 'details'})
 
     def test_uri(self):
         """The _uri() method returns a URI below the resource."""

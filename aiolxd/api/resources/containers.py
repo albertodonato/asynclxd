@@ -29,6 +29,12 @@ class Logfiles(ResourceCollection):
 class Snapshot(NamedResource):
     """API resource for container snapshots."""
 
+    @classmethod
+    def id_from_details(cls, details):
+        # return just the snapshot name
+        resource_id = super().id_from_details(details)
+        return resource_id.split('/')[-1]
+
 
 class Snapshots(ResourceCollection):
     """Snapshots collection API methods."""

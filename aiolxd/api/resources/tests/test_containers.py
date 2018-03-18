@@ -1,4 +1,6 @@
-from asynctest import TestCase
+from unittest import TestCase
+
+from asynctest import TestCase as AsyncTestCase
 
 from ..containers import (
     Container,
@@ -8,7 +10,7 @@ from ..containers import (
 from ...testing import FakeRemote
 
 
-class ContainerTest(TestCase):
+class ContainerTests(AsyncTestCase):
 
     async def test_logs(self):
         """The logs collection returns log files for the container."""
@@ -31,3 +33,11 @@ class ContainerTest(TestCase):
         self.assertEqual(
             remote.calls,
             [(('GET', '/containers/c/snapshots', None, None, None, None))])
+
+
+class SnapshotTests(TestCase):
+
+    def test_id_from_details_strips_container_name(self):
+        """The container name prefix is stripped from the snapshot ID."""
+        details = {'name': 'container1/snapshot1', 'other': 'details'}
+        self.assertEqual(Snapshot.id_from_details(details), 'snapshot1')

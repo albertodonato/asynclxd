@@ -99,10 +99,7 @@ class ResourceCollection(metaclass=abc.ABCMeta):
 
     def _resource_from_details(self, details):
         """Return a resource instance from its details."""
-        resource_id = details[self.resource_class.id_attribute]
-        # if the ID contains slashes, it's a subresource whose ID contains the
-        # parent resource ID (such as for snapshots); drop the prefix
-        resource_id = resource_id.split('/')[-1]
+        resource_id = self.resource_class.id_from_details(details)
         resource = self.resource_class(
             self._remote, self._resource_uri(resource_id))
         resource.update_details(details)
@@ -156,6 +153,13 @@ class Resource(metaclass=abc.ABCMeta):
         value = self.uri.split('/')[-1]
         if value:
             return unquote(value)
+
+    @classmethod
+    def id_from_details(cls, details):
+        """Return the ID for a resource from details."""
+        if not cls.id_attribute:
+            raise ValueError('Resource has no ID attribute')
+        return details[cls.id_attribute]
 
     def update_details(self, details):
         """Update deatils for the resource."""
