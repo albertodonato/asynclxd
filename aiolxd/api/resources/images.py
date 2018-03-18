@@ -1,9 +1,21 @@
 """API resources for images."""
 
 from ..resource import (
+    Collection,
+    NamedResource,
     Resource,
     ResourceCollection,
 )
+
+
+class Alias(NamedResource):
+    """API resource for image aliases."""
+
+
+class Aliases(ResourceCollection):
+    """Aliases collection API methods."""
+
+    resource_class = Alias
 
 
 class Image(Resource):
@@ -36,3 +48,6 @@ class Images(ResourceCollection):
     """Images collection API methods."""
 
     resource_class = Image
+
+    #: Collection property for accessing image aliases.
+    aliases = Collection(Aliases)

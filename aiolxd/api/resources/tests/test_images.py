@@ -1,6 +1,10 @@
 from asynctest import TestCase
 
-from ..images import Image
+from ..images import (
+    Alias,
+    Image,
+    Images,
+)
 from ..operations import Operation
 from ...http import Response
 from ...testing import FakeRemote
@@ -50,3 +54,20 @@ class ImageTest(TestCase):
         self.assertEqual(
             remote.calls,
             [(('POST', '/images/i/refresh', None, None, None, None))])
+
+
+class ImagesTest(TestCase):
+
+    async def test_aliases(self):
+        """The aliases collection returns image aliases."""
+        remote = FakeRemote(
+            responses=[['/images/aliases/a/one', '/images/aliases/b']])
+        collection = Images(remote, '/images')
+        [alias1, alias2] = await collection.aliases.read()
+        self.assertIsInstance(alias1, Alias)
+        self.assertEqual(alias1.uri, '/images/aliases/a/one')
+        self.assertIsInstance(alias2, Alias)
+        self.assertEqual(alias2.uri, '/images/aliases/b')
+        self.assertEqual(
+            remote.calls,
+            [(('GET', '/images/aliases', None, None, None, None))])
