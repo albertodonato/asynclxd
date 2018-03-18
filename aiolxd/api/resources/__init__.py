@@ -1,10 +1,7 @@
 """API resources."""
 
 from .certificates import Certificates
-from .containers import (
-    Containers,
-    Snapshots,
-)
+from .containers import Containers
 from .images import Images
 from .networks import Networks
 from .operations import Operations
@@ -18,5 +15,4 @@ __all__ = [
     'Networks',
     'Operations',
     'Profiles',
-    'Snapshots',
 ]
