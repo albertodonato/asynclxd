@@ -1,8 +1,8 @@
 from asynctest import TestCase
 
 from ..images import (
-    Alias,
     Image,
+    ImageAlias,
     Images,
 )
 from ..operations import Operation
@@ -22,7 +22,7 @@ class ImageTest(TestCase):
         image = Image(remote, '/images/i')
         image.update_details(details)
         [alias] = image['aliases']
-        self.assertIsInstance(alias, Alias)
+        self.assertIsInstance(alias, ImageAlias)
         self.assertEqual(alias.uri, '/images/aliases/a')
         self.assertEqual(alias.details(), alias_details)
 
@@ -78,9 +78,9 @@ class ImagesTest(TestCase):
             responses=[['/images/aliases/a/one', '/images/aliases/b']])
         collection = Images(remote, '/images')
         [alias1, alias2] = await collection.aliases.read()
-        self.assertIsInstance(alias1, Alias)
+        self.assertIsInstance(alias1, ImageAlias)
         self.assertEqual(alias1.uri, '/images/aliases/a/one')
-        self.assertIsInstance(alias2, Alias)
+        self.assertIsInstance(alias2, ImageAlias)
         self.assertEqual(alias2.uri, '/images/aliases/b')
         self.assertEqual(
             remote.calls,

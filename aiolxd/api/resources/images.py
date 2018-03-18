@@ -8,18 +8,18 @@ from ..resource import (
 )
 
 
-class Alias(NamedResource):
+class ImageAlias(NamedResource):
     """API resource for image aliases."""
 
 
-class Aliases(ResourceCollection):
-    """Aliases collection API methods."""
+class ImageAliases(ResourceCollection):
+    """Image aliases collection API methods."""
 
-    resource_class = Alias
+    resource_class = ImageAlias
 
 
 def related_aliases(remote, details):
-    """Factory returning Alias instance from details."""
+    """Factory returning ImageAlias instance from details."""
     return remote.images.aliases.resource_from_details(details)
 
 
@@ -59,4 +59,4 @@ class Images(ResourceCollection):
     resource_class = Image
 
     #: Collection property for accessing image aliases.
-    aliases = Collection(Aliases)
+    aliases = Collection(ImageAliases)
