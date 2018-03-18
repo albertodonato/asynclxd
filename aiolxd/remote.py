@@ -171,10 +171,10 @@ class Remote(Loggable):
         if not self._session:
             raise SessionError('Not in a session')
 
-        path = self._full_path(path)
         self.logger.debug('{method} {path} {content}'.format(
             method=method, path=self._full_path(path, params=params),
             content=content))
+        path = self._full_path(path)
         response = await request(
             self._session, method, path, params=params, headers=headers,
             content=content, upload=upload)

@@ -1,6 +1,8 @@
 """API resources for containers."""
 
+from .snapshots import Snapshots
 from ..resource import (
+    Collection,
     ResourceCollection,
     NamedResource,
 )
@@ -8,6 +10,9 @@ from ..resource import (
 
 class Container(NamedResource):
     """API resource for containers."""
+
+    #: Collection property for accessing snapshots.
+    snapshots = Collection(Snapshots)
 
 
 class Containers(ResourceCollection):
