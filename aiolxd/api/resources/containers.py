@@ -1,11 +1,21 @@
 """API resources for containers."""
 
-from .snapshots import Snapshots
 from ..resource import (
     Collection,
     ResourceCollection,
     NamedResource,
 )
+
+
+class Snapshot(NamedResource):
+    """API resource for container snapshots."""
+
+
+class Snapshots(ResourceCollection):
+    """Snapshots collection API methods."""
+
+    uri_name = 'snapshots'
+    resource_class = Snapshot
 
 
 class Container(NamedResource):

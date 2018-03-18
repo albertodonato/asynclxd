@@ -1,7 +1,9 @@
 from asynctest import TestCase
 
-from ..containers import Container
-from ..snapshots import Snapshot
+from ..containers import (
+    Container,
+    Snapshot,
+)
 from ...testing import FakeRemote
 
 

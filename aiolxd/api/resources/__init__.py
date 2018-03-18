@@ -1,12 +1,14 @@
 """API resources."""
 
 from .certificates import Certificates
-from .containers import Containers
+from .containers import (
+    Containers,
+    Snapshots,
+)
 from .images import Images
 from .networks import Networks
 from .operations import Operations
 from .profiles import Profiles
-from .snapshots import Snapshots
 
 
 __all__ = [
