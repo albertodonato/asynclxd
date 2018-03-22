@@ -32,7 +32,6 @@ For example:
         for image in resp:
             resp = await image.read()
             pprint(resp.metadata)
-
             # image details have been read, now they're also cached (same
             # output as above)
             pprint(image.details())
@@ -43,7 +42,7 @@ For example:
         # rename it
         await container.rename('new-c')
         # change some details
-        await c.update({'description': 'foo'})
+        await container.update({'description': 'foo'})
         # and now delete it
         await container.delete()
         
