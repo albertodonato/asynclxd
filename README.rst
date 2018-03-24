@@ -1,6 +1,6 @@
-============================================
-aioLXD - Asynchronous client for the LXD API
-============================================
+====================================================
+aioLXD - Asynchronous client library for the LXD API
+====================================================
 
 |Latest Version| |Build Status| |Coverage Status| |Documentation Status|
 
@@ -9,9 +9,9 @@ aioLXD is an asyncio-based client for the LXD_ REST API.
 It provides an high level API to interact with resources on LXD servers, such
 as containers, images, networks, profiles and storage.
 
-LXD servers are accessible through the :class:`aiolxd.remote.Remote` class,
-which exposes server details and configuration, as well as access to
-resource collections.
+LXD servers are accessible through the `aiolxd.remote.Remote` class, which
+exposes server details and configuration, as well as access to resource
+collections.
 
 Collections (such as `containers`, `images`, `profiles`, `networks`, ...) allow
 creating and fetching resources, which can be modified, updated or deleted.
@@ -45,7 +45,6 @@ For example:
         await container.update({'description': 'foo'})
         # and now delete it
         await container.delete()
-        
 
 
 .. _LXD: https://linuxcontainers.org/lxd/
