@@ -60,7 +60,7 @@ class CollectionTests(TestCase):
         self.assertEqual(collection.uri, '/1.0/collection')
 
     def test_read_uri(self):
-        """If the  owner doesn't define `resource_uri`, `uri` is used."""
+        """If the owner doesn't define `resource_uri`, `uri` is used."""
 
         class SampleCollection:
 
@@ -81,6 +81,26 @@ class CollectionTests(TestCase):
         self.assertIsInstance(collection, SampleCollection)
         self.assertIs(collection.remote, remote)
         self.assertEqual(collection.uri, '/1.0/collection')
+
+    def test_uri_with_specified_name(self):
+        """The uri is build based on Collection name, if provided."""
+
+        class SampleCollection:
+
+            def __init__(self, remote, uri):
+                self.remote = remote
+                self.uri = uri
+
+        class SampleRemote:
+
+            collection = Collection(SampleCollection, name='c')
+
+            def __init__(self):
+                self.resource_uri = '/1.0'
+                self._remote = self
+
+        collection = SampleRemote().collection
+        self.assertEqual(collection.uri, '/1.0/c')
 
 
 class ResourceCollectionTests(AsyncTestCase):

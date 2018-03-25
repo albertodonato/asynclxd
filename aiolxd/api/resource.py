@@ -9,16 +9,23 @@ from urllib.parse import (
 
 
 class Collection:
-    """Property to wrap an ResourceCollection."""
+    """Property to wrap an ResourceCollection.
 
-    #: The name of the attribute for the collection in the owner
-    name = ''
+    :param ResourceCollection resource_collection: the resource collection
+        to wrap.
+    :param str name: the name of the collection in the API (if not specified,
+        the name of the attribute for the Collection is used).
 
-    def __init__(self, resource_collection):
+    """
+
+    def __init__(self, resource_collection, name=''):
         self.resource_collection = resource_collection
+        self.name = name
 
     def __set_name__(self, owner, name):
-        self.name = name
+        if not self.name:
+            # if the name is not set, use the attribute name
+            self.name = name
 
     def __get__(self, instance, owner):
         base_uri = getattr(instance, 'resource_uri', None)
