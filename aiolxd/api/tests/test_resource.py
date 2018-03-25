@@ -206,6 +206,13 @@ class ResourceCollectionTests(AsyncTestCase):
         self.assertIsNone(resource.details())
         self.assertEqual(remote.calls, [])
 
+    def test_get_resource_full_uri(self):
+        """If the full resource URI is passed, prefix is stripped."""
+        remote = FakeRemote()
+        collection = SampleResourceCollection(remote, '/resources')
+        resource = collection.get_resource('/resources/a-resource')
+        self.assertEqual(resource.uri, '/resources/a-resource')
+
     async def test_get(self):
         """The get method returns a single resource, reading its details."""
         remote = FakeRemote(responses=[{'some': 'details'}])

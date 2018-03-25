@@ -116,6 +116,9 @@ class ResourceCollection(metaclass=abc.ABCMeta):
         return content
 
     def _resource_uri(self, resource_id):
+        if resource_id.startswith(self.uri):
+            # strip prefix
+            resource_id = resource_id[len(self.uri)+1:]
         return '{uri}/{resource_id}'.format(
             uri=self.uri, resource_id=quote(resource_id))
 
