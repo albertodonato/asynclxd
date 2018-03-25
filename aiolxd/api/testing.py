@@ -7,7 +7,6 @@ from json import dumps as json_dumps
 from aiohttp import (
     ClientResponse,
     RequestInfo,
-    StreamReader,
 )
 from multidict import CIMultiDict
 from yarl import URL
