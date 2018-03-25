@@ -4,7 +4,7 @@ aioLXD - Asynchronous client library for the LXD API
 
 |Latest Version| |Build Status| |Coverage Status| |Documentation Status|
 
-aioLXD is an asyncio-based client for the LXD_ REST API.
+aioLXD is an asyncio-based client library for the the LXD_ REST API.
 
 It provides an high level API to interact with resources on LXD servers, such
 as containers, images, networks, profiles and storage.

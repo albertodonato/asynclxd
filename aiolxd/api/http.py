@@ -1,7 +1,6 @@
 """Perform requests to the API."""
 
 from abc import ABC
-import os
 from pathlib import Path
 from pprint import pformat
 
@@ -18,6 +17,14 @@ class ContentStream(ABC):
 
 
 ContentStream.register(StreamReader)
+
+
+class UploadFilePath(ABC):
+    """Abstract base class for classes providing an upload path."""
+
+
+UploadFilePath.register(str)
+UploadFilePath.register(Path)
 
 
 class Response:
@@ -123,7 +130,7 @@ async def request(session, method, path, params=None, headers=None,
         headers['Content-Type'] = 'application/json'
     if upload:
         headers['Content-Type'] = 'application/octet-stream'
-        if isinstance(upload, os.PathLike):
+        if isinstance(upload, UploadFilePath):
             upload = Path(upload).open()
     response = await session.request(
         method, path, params=params, headers=headers, json=content,
@@ -135,7 +142,7 @@ async def request(session, method, path, params=None, headers=None,
     try:
         response.raise_for_status()
     except ClientResponseError as error:
-        error_code = error.code
+        error_code = error.status
         error_mesg = error.message
         if error.headers.get('Content-Type') == 'application/json':
             content = await response.json()

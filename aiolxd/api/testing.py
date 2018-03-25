@@ -1,9 +1,14 @@
 """API testing helpers."""
 
+from asyncio import get_event_loop
 import io
 from json import dumps as json_dumps
 
-from aiohttp import ClientResponse
+from aiohttp import (
+    ClientResponse,
+    RequestInfo,
+    StreamReader,
+)
 from multidict import CIMultiDict
 from yarl import URL
 
@@ -61,6 +66,9 @@ class FakeStreamReader(ContentStream):
     def __init__(self, stream):
         self._stream = stream
 
+    async def read(self):
+        return self._stream.read()
+
     def iter_any(self):
         return FakeStreamIterator(self._stream)
 
@@ -87,15 +95,23 @@ class FakeStreamIterator:
 
 
 def make_http_response(status=200, reason='OK', method='GET', url='/',
-                       content=None):
-    response = ClientResponse(method, URL(url))
+                       headers=None, content=None):
+    """Return a minimal ClientResponse with fields used in tests."""
+    url = URL(url)
+    headers = CIMultiDict(headers or {})
+    request_info = RequestInfo(url=url, method=method, headers=headers)
+    response = ClientResponse(
+        method, url, writer=None, continue100=None, timer=None,
+        request_info=request_info, auto_decompress=True, traces=(),
+        loop=get_event_loop(), session=None)
     response.status = status
     response.reason = reason
-    response.headers = CIMultiDict()
+    response.headers = headers
     if isinstance(content, io.IOBase):
         response.content = FakeStreamReader(content)
     elif content is not None:
-        response._content = json_dumps(content).encode('utf8')
+        response.content = FakeStreamReader(
+            io.BytesIO(json_dumps(content).encode('utf8')))
         response.headers['Content-Type'] = 'application/json'
     return response
 

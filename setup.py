@@ -27,7 +27,7 @@ config = {
     'include_package_data': True,
     'entry_points': {'console_scripts': []},
     'test_suite': 'aiolxd',
-    'install_requires': ['aiohttp < 3.1.0', 'pyxdg', 'PyYAML', 'toolrack'],
+    'install_requires': ['aiohttp >=3.1.0', 'pyxdg', 'PyYAML', 'toolrack'],
     'tests_require': tests_require,
     'extras_require': {'testing': tests_require},
     'keywords': 'LXD rest API',
