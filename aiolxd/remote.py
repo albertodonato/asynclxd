@@ -55,6 +55,7 @@ class Remote(Loggable):
     - :data:`networks`
     - :data:`operations`
     - :data:`profiles`
+    - :data:`storage_pools`
 
     Those allow creating new resources or fetching existing ones to interact
     with them.
@@ -80,6 +81,8 @@ class Remote(Loggable):
     operations = Collection(resources.Operations)
     #: Collection property for accessing profiles.
     profiles = Collection(resources.Profiles)
+    #: Collection property for accessing storage pools.
+    storage_pools = Collection(resources.StoragePools, name='storage-pools')
 
     _session_factory = ClientSession  # for testing
     _session = None

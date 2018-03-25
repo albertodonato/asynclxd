@@ -6,6 +6,7 @@ from .images import Images
 from .networks import Networks
 from .operations import Operations
 from .profiles import Profiles
+from .storage import StoragePools
 
 
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     'Networks',
     'Operations',
     'Profiles',
+    'StoragePools',
 ]
