@@ -101,11 +101,11 @@ def make_http_response(status=200, reason='OK', method='GET', url='/',
     request_info = RequestInfo(url=url, method=method, headers=headers)
     response = ClientResponse(
         method, url, writer=None, continue100=None, timer=None,
-        request_info=request_info, auto_decompress=True, traces=(),
+        request_info=request_info, traces=(),
         loop=get_event_loop(), session=None)
     response.status = status
     response.reason = reason
-    response.headers = headers
+    response._headers = headers
     if isinstance(content, io.IOBase):
         response.content = FakeStreamReader(content)
     elif content is not None:
