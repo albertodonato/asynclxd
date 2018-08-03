@@ -14,9 +14,9 @@ to access resources exposed by the API.
 
 """
 
+import ssl
 from asyncio import get_event_loop
 from collections import namedtuple
-import ssl
 
 from aiohttp import (
     ClientSession,
@@ -27,12 +27,11 @@ from toolrack.log import Loggable
 
 from .api import (
     Collection,
-    resources,
     http,
-    websocket
+    resources,
+    websocket,
 )
 from .uri import RemoteURI
-
 
 #: Certificates for SSL connection.
 SSLCerts = namedtuple('SSLCerts', ['server_cert', 'client_cert', 'client_key'])
@@ -162,8 +161,14 @@ class Remote(Loggable):
         """Return a handler yielding events of specified types."""
         return resources.Events(self)
 
-    async def request(self, method, path, params=None, headers=None,
-                      content=None, upload=None):
+    async def request(
+            self,
+            method,
+            path,
+            params=None,
+            headers=None,
+            content=None,
+            upload=None):
         """Perform an API request within the session.
 
         :param str method: the HTTP method.
@@ -180,13 +185,20 @@ class Remote(Loggable):
         if not self._session:
             raise SessionError('Not in a session')
 
-        self.logger.debug('{method} {path} {content}'.format(
-            method=method, path=self._full_path(path, params=params),
-            content=content))
+        self.logger.debug(
+            '{method} {path} {content}'.format(
+                method=method,
+                path=self._full_path(path, params=params),
+                content=content))
         path = self._full_path(path)
         response = await http.request(
-            self._session, method, path, params=params, headers=headers,
-            content=content, upload=upload)
+            self._session,
+            method,
+            path,
+            params=params,
+            headers=headers,
+            content=content,
+            upload=upload)
         return await self._make_response(response)
 
     def websocket(self, handler, path, params=None):
@@ -203,8 +215,9 @@ class Remote(Loggable):
             raise SessionError('Not in a session')
 
         path = self._full_path(path, params=params)
-        self.logger.debug('{handler_class} {path}'.format(
-            handler_class=handler.__class__.__name__, path=path))
+        self.logger.debug(
+            '{handler_class} {path}'.format(
+                handler_class=handler.__class__.__name__, path=path))
         return self._loop.create_task(
             websocket.connect(self._session, path, handler))
 

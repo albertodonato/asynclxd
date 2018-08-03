@@ -1,12 +1,12 @@
 from asynctest import TestCase
 
+from ...testing import FakeRemote
 from ..containers import Container
 from ..images import Image
 from ..operations import (
     Operation,
     Operations,
 )
-from ...testing import FakeRemote
 
 
 class OperationTest(TestCase):
@@ -16,7 +16,9 @@ class OperationTest(TestCase):
         details = {
             'resources': {
                 'containers': ['/containers/c'],
-                'images': ['/images/i']}}
+                'images': ['/images/i']
+            }
+        }
         operation = Operation(FakeRemote(), '/operations/op')
         operation.update_details(details)
         [container] = operation['resources']['containers']
@@ -46,21 +48,30 @@ class OperationTest(TestCase):
         operation = Operation(remote, '/operations/op')
         await operation.wait(timeout=20)
         self.assertEqual(
-            remote.calls,
-            [(('GET', '/operations/op/wait', {'timeout': 20}, None, None,
-               None))])
+            remote.calls, [
+                (
+                    (
+                        'GET', '/operations/op/wait', {
+                            'timeout': 20
+                        }, None, None, None))
+            ])
 
 
 class OperationsTests(TestCase):
 
     async def test_read(self):
         """The read method returns opreations in all statuses."""
-        remote = FakeRemote(responses=[
-            {'running': ['/operations/one', '/operations/two'],
-             'queued': ['/operations/three']}])
+        remote = FakeRemote(
+            responses=[
+                {
+                    'running': ['/operations/one', '/operations/two'],
+                    'queued': ['/operations/three']
+                }
+            ])
         collection = Operations(remote, '/operations')
         self.assertEqual(
-            await collection.read(),
-            [Operation(remote, '/operations/one'),
-             Operation(remote, '/operations/two'),
-             Operation(remote, '/operations/three')])
+            await collection.read(), [
+                Operation(remote, '/operations/one'),
+                Operation(remote, '/operations/two'),
+                Operation(remote, '/operations/three')
+            ])

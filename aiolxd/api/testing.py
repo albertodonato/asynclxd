@@ -1,14 +1,13 @@
 """API testing helpers."""
 
-from asyncio import get_event_loop
 import io
+from asyncio import get_event_loop
 from json import dumps as json_dumps
 
 from aiohttp import (
     ClientResponse,
     RequestInfo,
     WSMsgType,
-
 )
 from multidict import CIMultiDict
 from yarl import URL
@@ -41,8 +40,14 @@ class FakeRemote:
         self.responses = responses or []
         self.calls = []
 
-    async def request(self, method, path, params=None, headers=None,
-                      content=None, upload=None):
+    async def request(
+            self,
+            method,
+            path,
+            params=None,
+            headers=None,
+            content=None,
+            upload=None):
         self.calls.append((method, path, params, headers, content, upload))
         response = self.responses.pop(0)
         if isinstance(response, Response):
@@ -59,8 +64,9 @@ class FakeSession:
         self.websocket = websocket
         self.calls = []
 
-    async def request(self, method, path, params=None, headers=None,
-                      json=None, data=None):
+    async def request(
+            self, method, path, params=None, headers=None, json=None,
+            data=None):
         content = json
         if data:
             content = data.read()
@@ -144,16 +150,23 @@ class FakeStreamIterator:
         return content
 
 
-def make_http_response(status=200, reason='OK', method='GET', url='/',
-                       headers=None, content=None):
+def make_http_response(
+        status=200, reason='OK', method='GET', url='/', headers=None,
+        content=None):
     """Return a minimal ClientResponse with fields used in tests."""
     url = URL(url)
     headers = CIMultiDict(headers or {})
     request_info = RequestInfo(url=url, method=method, headers=headers)
     response = ClientResponse(
-        method, url, writer=None, continue100=None, timer=None,
-        request_info=request_info, traces=(),
-        loop=get_event_loop(), session=None)
+        method,
+        url,
+        writer=None,
+        continue100=None,
+        timer=None,
+        request_info=request_info,
+        traces=(),
+        loop=get_event_loop(),
+        session=None)
     response.status = status
     response.reason = reason
     response._headers = headers
@@ -172,7 +185,8 @@ def make_error_response(error, code=400, http_status=None):
         'type': 'error',
         'error': error,
         'error_code': code,
-        'metadata': {}}
+        'metadata': {}
+    }
     if http_status is None:
         http_status = code
     return make_http_response(
@@ -185,7 +199,8 @@ def make_response_content(metadata=None):
         'type': 'sync',
         'status': 'Success',
         'status_code': 200,
-        'metadata': metadata or {}}
+        'metadata': metadata or {}
+    }
 
 
 def make_resource(resource_class, uri='/resource', etag=None, details=None):

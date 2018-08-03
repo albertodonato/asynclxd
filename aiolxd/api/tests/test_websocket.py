@@ -6,8 +6,8 @@ from ..testing import (
     FakeWSMessage,
 )
 from ..websocket import (
-    connect,
     WebsocketHandler,
+    connect,
 )
 
 

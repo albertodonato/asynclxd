@@ -7,9 +7,9 @@ from fixtures import TestWithFixtures
 from toolrack.testing import TempDirFixture
 
 from ..http import (
-    request,
     Response,
     ResponseError,
+    request,
 )
 from ..resources.operations import Operation
 from ..testing import (
@@ -42,9 +42,12 @@ class RequestTests(TestCase, TestWithFixtures):
         content = {'some': 'content'}
         await request(self.session, 'POST', '/', content=content)
         self.assertEqual(
-            self.session.calls,
-            [('POST', '/', None, {'Content-Type': 'application/json'},
-              content)])
+            self.session.calls, [
+                (
+                    'POST', '/', None, {
+                        'Content-Type': 'application/json'
+                    }, content)
+            ])
 
     async def test_request_with_upload_path(self):
         """The request call can include content from a file."""
@@ -52,9 +55,12 @@ class RequestTests(TestCase, TestWithFixtures):
         self.session.responses.append('response data')
         await request(self.session, 'POST', '/', upload=upload_file)
         self.assertEqual(
-            self.session.calls,
-            [('POST', '/', None,
-              {'Content-Type': 'application/octet-stream'}, 'data')])
+            self.session.calls, [
+                (
+                    'POST', '/', None, {
+                        'Content-Type': 'application/octet-stream'
+                    }, 'data')
+            ])
 
     async def test_request_with_upload_file_descriptor(self):
         """The request call can include content from a file descriptor."""
@@ -63,9 +69,12 @@ class RequestTests(TestCase, TestWithFixtures):
         upload = upload_file.open()
         await request(self.session, 'POST', '/', upload=upload)
         self.assertEqual(
-            self.session.calls,
-            [('POST', '/', None,
-              {'Content-Type': 'application/octet-stream'}, 'data')])
+            self.session.calls, [
+                (
+                    'POST', '/', None, {
+                        'Content-Type': 'application/octet-stream'
+                    }, 'data')
+            ])
         # the passed file descriptor is closed
         self.assertTrue(upload.closed)
 
@@ -74,9 +83,7 @@ class RequestTests(TestCase, TestWithFixtures):
         self.session.responses.append('response data')
         params = {'a': 'param'}
         await request(self.session, 'POST', '/', params=params)
-        self.assertEqual(
-            self.session.calls,
-            [('POST', '/', params, {}, None)])
+        self.assertEqual(self.session.calls, [('POST', '/', params, {}, None)])
 
     async def test_request_with_headers(self):
         """The request call can include extra headers in the request."""
@@ -85,7 +92,9 @@ class RequestTests(TestCase, TestWithFixtures):
         await request(self.session, 'POST', '/', headers=headers)
         self.assertEqual(
             self.session.calls,
-            [('POST', '/', None, {'X-Sample': 'value'}, None)])
+            [('POST', '/', None, {
+                'X-Sample': 'value'
+            }, None)])
 
     async def test_request_error(self):
         """The request call raises an error on failed requests."""
@@ -148,8 +157,10 @@ class ResponseTests(TestCase):
         """If the response is async, the operation is defined."""
         metadata = {'some': 'content'}
         response = Response(
-            FakeRemote(), 202, {'Location': '/operations/op'},
-            {'type': 'async', 'metadata': metadata})
+            FakeRemote(), 202, {'Location': '/operations/op'}, {
+                'type': 'async',
+                'metadata': metadata
+            })
         self.assertIsInstance(response.operation, Operation)
         self.assertEqual(response.operation.uri, '/operations/op')
         self.assertEqual(response.operation.details(), metadata)
@@ -175,10 +186,10 @@ class ResponseTests(TestCase):
         content = {'type': 'sync', 'metadata': {'some': 'content'}}
         response = Response(FakeRemote(), 200, headers, content)
         self.assertEqual(
-            dedent("""\
+            dedent(
+                """\
             {'etag': 'abcde',
              'http-code': 200,
              'location': '/some/url',
              'metadata': {'some': 'content'},
-             'type': 'sync'}"""),
-            response.pprint())
+             'type': 'sync'}"""), response.pprint())

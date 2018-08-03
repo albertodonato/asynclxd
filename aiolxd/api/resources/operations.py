@@ -2,12 +2,12 @@
 
 from itertools import chain
 
-from .containers import Container
-from .images import Image
 from ..resource import (
     Resource,
     ResourceCollection,
 )
+from .containers import Container
+from .images import Image
 
 
 class Operation(Resource):
@@ -15,11 +15,12 @@ class Operation(Resource):
 
     id_attribute = 'id'
 
-    related_resources = frozenset([
-        (('resources', 'containers'), Container),
-        (('resources', 'images'), Image)
-        # XXX add "cluster" once cluster resources are supported
-    ])
+    related_resources = frozenset(
+        [
+            (('resources', 'containers'), Container),
+            (('resources', 'images'), Image)
+            # XXX add "cluster" once cluster resources are supported
+        ])
 
     async def wait(self, timeout=None):
         params = {'timeout': timeout} if timeout else None

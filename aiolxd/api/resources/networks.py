@@ -1,8 +1,8 @@
 """API resources for networks."""
 
 from ..resource import (
-    ResourceCollection,
     NamedResource,
+    ResourceCollection,
 )
 
 

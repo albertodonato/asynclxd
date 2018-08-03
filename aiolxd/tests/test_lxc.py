@@ -1,10 +1,10 @@
 from unittest import mock
 
+import yaml
 from toolrack.testing import (
     TempDirFixture,
     TestCase,
 )
-import yaml
 
 from ..lxc import (
     cli_config_dir,
@@ -44,16 +44,20 @@ class GetRemotesTests(TestCase):
     def test_remotes(self):
         """LXD remotes are returned."""
         self.make_config(
-            {'remotes': {
-                'local': {
-                    'addr': 'unix:///path/to/socket'},
-                'other': {
-                    'addr': 'https://example.com:8443',
-                    'protocol': 'lxd'}}})
+            {
+                'remotes': {
+                    'local': {
+                        'addr': 'unix:///path/to/socket'
+                    },
+                    'other': {
+                        'addr': 'https://example.com:8443',
+                        'protocol': 'lxd'
+                    }
+                }
+            })
         remotes = get_remotes(config_dir=self.tempdir.path)
         self.assertCountEqual(remotes, ['local', 'other'])
-        self.assertEqual(
-            str(remotes['local'].uri), 'unix:///path/to/socket')
+        self.assertEqual(str(remotes['local'].uri), 'unix:///path/to/socket')
         self.assertEqual(
             str(remotes['other'].uri), 'https://example.com:8443/')
 
@@ -66,12 +70,17 @@ class GetRemotesTests(TestCase):
     def test_ignore_non_lxd(self):
         """Remotes that don't use the 'lxd' protocol are ignored."""
         self.make_config(
-            {'remotes': {
-                'local': {
-                    'addr': 'unix:///path/to/socket'},
-                'other': {
-                    'addr': 'https://example.com:8443',
-                    'protocol': 'simplestreams'}}})
+            {
+                'remotes': {
+                    'local': {
+                        'addr': 'unix:///path/to/socket'
+                    },
+                    'other': {
+                        'addr': 'https://example.com:8443',
+                        'protocol': 'simplestreams'
+                    }
+                }
+            })
         remotes = get_remotes(config_dir=self.tempdir.path)
         self.assertCountEqual(remotes, ['local'])
 

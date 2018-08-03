@@ -9,6 +9,7 @@ from asynctest import TestCase
 from fixtures import TestWithFixtures
 from toolrack.testing import TempDirFixture
 
+from ..api.resources import Events
 from ..api.testing import (
     FakeSession,
     FakeWebSocket,
@@ -16,7 +17,6 @@ from ..api.testing import (
     make_http_response,
     make_response_content,
 )
-from ..api.resources import Events
 from ..api.websocket import WebsocketHandler
 from ..remote import (
     Remote,
@@ -99,9 +99,12 @@ class RemoteTests(TestCase, TestWithFixtures):
         async with self.remote:
             await self.remote.request('POST', '/', content=content)
         self.assertEqual(
-            session.calls,
-            [('POST', 'https://example.com:8443', None,
-              {'Content-Type': 'application/json'}, content)])
+            session.calls, [
+                (
+                    'POST', 'https://example.com:8443', None, {
+                        'Content-Type': 'application/json'
+                    }, content)
+            ])
 
     async def test_request_with_params(self):
         """Requests can include params."""
@@ -125,9 +128,12 @@ class RemoteTests(TestCase, TestWithFixtures):
         async with self.remote:
             await self.remote.request('POST', '/', upload=upload_file)
         self.assertEqual(
-            session.calls,
-            [('POST', 'https://example.com:8443', None,
-              {'Content-Type': 'application/octet-stream'}, 'data')])
+            session.calls, [
+                (
+                    'POST', 'https://example.com:8443', None, {
+                        'Content-Type': 'application/octet-stream'
+                    }, 'data')
+            ])
 
     async def test_request_with_headers(self):
         """Requests can include content."""
@@ -138,9 +144,12 @@ class RemoteTests(TestCase, TestWithFixtures):
             await self.remote.request(
                 'POST', '/', headers={'X-Sample': 'value'})
         self.assertEqual(
-            session.calls,
-            [('POST', 'https://example.com:8443', None,
-              {'X-Sample': 'value'}, None)])
+            session.calls, [
+                (
+                    'POST', 'https://example.com:8443', None, {
+                        'X-Sample': 'value'
+                    }, None)
+            ])
 
     async def test_request_binary_response(self):
         """Requests can include content."""
@@ -168,9 +177,11 @@ class RemoteTests(TestCase, TestWithFixtures):
         async with self.remote:
             await self.remote.request('GET', 'relative-path')
         self.assertEqual(
-            session.calls,
-            [('GET', 'https://example.com:8443/1.0/relative-path', None,
-              {}, None)])
+            session.calls, [
+                (
+                    'GET', 'https://example.com:8443/1.0/relative-path', None,
+                    {}, None)
+            ])
 
     async def test_websocket(self):
         """Websocket connections can be performed with the server."""
@@ -210,8 +221,7 @@ class RemoteTests(TestCase, TestWithFixtures):
         """If the URI is https, a TCPConnector is used."""
         self.remote._session_factory = FakeSession
         async with self.remote:
-            self.assertIsInstance(
-                self.remote._session.connector, TCPConnector)
+            self.assertIsInstance(self.remote._session.connector, TCPConnector)
             self.assertIsNone(self.remote._session.connector._ssl)
 
     async def test_api_versions(self):
@@ -249,16 +259,21 @@ class RemoteTests(TestCase, TestWithFixtures):
         async with self.remote:
             response = await self.remote.resources()
         self.assertEqual(
-            session.calls,
-            [('GET', 'https://example.com:8443/1.0/resources', None, {},
-              None)])
+            session.calls, [
+                (
+                    'GET', 'https://example.com:8443/1.0/resources', None, {},
+                    None)
+            ])
         self.assertEqual(response, resources)
 
     async def test_config_read(self):
         """It's possible to read the server configuration."""
         info = {
-            'config': {'core.https_address': '[]:8443'},
-            'api_version': '1.0'}
+            'config': {
+                'core.https_address': '[]:8443'
+            },
+            'api_version': '1.0'
+        }
         session = FakeSession(responses=[make_response_content(info)])
         self.remote._session_factory = lambda connector=None: session
 
@@ -277,9 +292,14 @@ class RemoteTests(TestCase, TestWithFixtures):
         async with self.remote:
             await self.remote.config(options=options)
         self.assertEqual(
-            session.calls,
-            [('PATCH', 'https://example.com:8443/1.0', None,
-              {'Content-Type': 'application/json'}, {'config': options})])
+            session.calls, [
+                (
+                    'PATCH', 'https://example.com:8443/1.0', None, {
+                        'Content-Type': 'application/json'
+                    }, {
+                        'config': options
+                    })
+            ])
 
     async def test_config_replace(self):
         """It's possible to replace the server configuration."""
@@ -289,6 +309,11 @@ class RemoteTests(TestCase, TestWithFixtures):
         async with self.remote:
             await self.remote.config(options=options, replace=True)
         self.assertEqual(
-            session.calls,
-            [('PUT', 'https://example.com:8443/1.0', None,
-              {'Content-Type': 'application/json'}, {'config': options})])
+            session.calls, [
+                (
+                    'PUT', 'https://example.com:8443/1.0', None, {
+                        'Content-Type': 'application/json'
+                    }, {
+                        'config': options
+                    })
+            ])

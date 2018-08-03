@@ -7,8 +7,8 @@ from ..http import Response
 from ..resource import (
     Collection,
     NamedResource,
-    ResourceCollection,
     Resource,
+    ResourceCollection,
 )
 from ..resources.operations import Operation
 from ..testing import (
@@ -24,9 +24,7 @@ class SampleResource(Resource):
 
 class SampleResourceWithRelated(SampleResource):
 
-    related_resources = frozenset([
-        (('foo', 'sample'), SampleResource)
-    ])
+    related_resources = frozenset([(('foo', 'sample'), SampleResource)])
 
 
 class SampleResourceCollection(ResourceCollection):
@@ -121,8 +119,15 @@ class ResourceCollectionTests(AsyncTestCase):
         """The create method returns a new instance of resource."""
         remote = FakeRemote()
         response = Response(
-            remote, 201, {'ETag': 'abcde', 'Location': '/resources/new'},
-            {'type': 'sync', 'metadata': {'resource': 'details'}})
+            remote, 201, {
+                'ETag': 'abcde',
+                'Location': '/resources/new'
+            }, {
+                'type': 'sync',
+                'metadata': {
+                    'resource': 'details'
+                }
+            })
         remote.responses.append(response)
         collection = SampleResourceCollection(remote, '/resources')
         resource = await collection.create({'some': 'data'})
@@ -134,8 +139,13 @@ class ResourceCollectionTests(AsyncTestCase):
         metadata = {'resource': 'details'}
         remote = FakeRemote()
         response = Response(
-            remote, 201, {'ETag': 'abcde', 'Location': '/resources/new'},
-            {'type': 'sync', 'metadata': metadata})
+            remote, 201, {
+                'ETag': 'abcde',
+                'Location': '/resources/new'
+            }, {
+                'type': 'sync',
+                'metadata': metadata
+            })
         remote.responses.append(response)
         collection = SampleResourceCollection(remote, '/resources', raw=True)
         result = await collection.create({'some': 'data'})
@@ -146,8 +156,13 @@ class ResourceCollectionTests(AsyncTestCase):
         metadata = {'resource': 'details'}
         remote = FakeRemote()
         response = Response(
-            remote, 201, {'ETag': 'abcde', 'Location': '/operations/op'},
-            {'type': 'async', 'metadata': metadata})
+            remote, 201, {
+                'ETag': 'abcde',
+                'Location': '/operations/op'
+            }, {
+                'type': 'async',
+                'metadata': metadata
+            })
         remote.responses.append(response)
         collection = SampleResourceCollection(remote, '/resources')
         operation = await collection.create({'some': 'data'})
@@ -160,9 +175,10 @@ class ResourceCollectionTests(AsyncTestCase):
         remote = FakeRemote(responses=[['/resources/one', '/resources/two']])
         collection = SampleResourceCollection(remote, '/resources')
         self.assertEqual(
-            await collection.read(),
-            [SampleResource(remote, '/resources/one'),
-             SampleResource(remote, '/resources/two')])
+            await collection.read(), [
+                SampleResource(remote, '/resources/one'),
+                SampleResource(remote, '/resources/two')
+            ])
 
     async def test_read_process_content_override(self):
         """It's possible to further process details from the call result."""
@@ -174,14 +190,21 @@ class ResourceCollectionTests(AsyncTestCase):
 
         collection._process_content = process_content
         self.assertEqual(
-            await collection.read(),
-            [SampleResource(remote, '/new/resources/one'),
-             SampleResource(remote, '/new/resources/two')])
+            await collection.read(), [
+                SampleResource(remote, '/new/resources/one'),
+                SampleResource(remote, '/new/resources/two')
+            ])
 
     async def test_recursion(self):
         """The read method returns resources with details if recursive."""
         remote = FakeRemote(
-            responses=[[{'id': 'one', 'value': 1}, {'id': 'two', 'value': 2}]])
+            responses=[[{
+                'id': 'one',
+                'value': 1
+            }, {
+                'id': 'two',
+                'value': 2
+            }]])
         collection = SampleResourceCollection(remote, '/resources')
         resource1, resource2 = await collection.read(recursion=True)
         self.assertEqual(resource1.uri, '/resources/one')
@@ -295,7 +318,9 @@ class ResourceTests(AsyncTestCase):
     def test_deepcopy(self):
         """deepcopy returns a copy of the object."""
         resource = make_resource(
-            SampleResource, uri='/res', etag='abcde',
+            SampleResource,
+            uri='/res',
+            etag='abcde',
             details={'some': 'detail'})
         copy = deepcopy(resource)
         self.assertEqual(copy.uri, '/res')
@@ -355,7 +380,10 @@ class ResourceTests(AsyncTestCase):
         """The update_details() method sets related resources."""
         details = {
             'id': 'res',
-            'foo': {'sample': ['/resource/one', '/resource/two']}}
+            'foo': {
+                'sample': ['/resource/one', '/resource/two']
+            }
+        }
         remote = FakeRemote(responses=[details])
         resource = SampleResourceWithRelated(remote, '/resource-with-related')
         resource.update_details(details)
@@ -415,7 +443,9 @@ class ResourceTests(AsyncTestCase):
             'id': 'res',
             'foo': {
                 'bar': 'baz',
-                'sample': ['/resource/one', '/resource/two']}}
+                'sample': ['/resource/one', '/resource/two']
+            }
+        }
         remote = FakeRemote(responses=[details])
         resource = SampleResourceWithRelated(remote, '/resource-with-related')
         await resource.read()
@@ -462,9 +492,13 @@ class ResourceTests(AsyncTestCase):
         content = {'key': 'value'}
         await resource.update(content)
         self.assertEqual(
-            remote.calls,
-            [(('PATCH', '/resource', None, {'If-Match': 'abcde'},
-               content, None))])
+            remote.calls, [
+                (
+                    (
+                        'PATCH', '/resource', None, {
+                            'If-Match': 'abcde'
+                        }, content, None))
+            ])
 
     async def test_update_with_etag_false(self):
         """The update method  doesn't use the ETag if not requested."""
@@ -487,8 +521,7 @@ class ResourceTests(AsyncTestCase):
         self.assertEqual(response.http_code, 200)
         self.assertEqual(response.metadata, 'some text')
         self.assertEqual(
-            remote.calls,
-            [(('PUT', '/resource', None, None, content, None))])
+            remote.calls, [(('PUT', '/resource', None, None, content, None))])
 
     async def test_replace_with_etag(self):
         """The replace method includes the ETag if cached."""
@@ -499,9 +532,13 @@ class ResourceTests(AsyncTestCase):
         content = {'key': 'value'}
         await resource.replace(content)
         self.assertEqual(
-            remote.calls,
-            [(('PUT', '/resource', None, {'If-Match': 'abcde'},
-               content, None))])
+            remote.calls, [
+                (
+                    (
+                        'PUT', '/resource', None, {
+                            'If-Match': 'abcde'
+                        }, content, None))
+            ])
 
     async def test_replace_with_etag_false(self):
         """The replace method doesn't include the ETag if not requested."""
@@ -538,9 +575,13 @@ class NamedResourceTests(AsyncTestCase):
         self.assertEqual(response.http_code, 204)
         self.assertEqual(response.metadata, {})
         self.assertEqual(
-            remote.calls,
-            [(('POST', '/resource', None, None,
-               {'name': 'new-resource'}, None))])
+            remote.calls, [
+                (
+                    (
+                        'POST', '/resource', None, None, {
+                            'name': 'new-resource'
+                        }, None))
+            ])
         self.assertEqual(resource.uri, '/new-resource')
         # cached details are cleared
         self.assertEqual(resource._details, {})

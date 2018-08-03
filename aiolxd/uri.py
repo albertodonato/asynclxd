@@ -2,7 +2,6 @@
 
 from yarl import URL
 
-
 #: Default location of the lxd UNIX socket.
 DEFAULT_UNIX_SOCKET_PATH = '/var/lib/lxd/unix.socket'
 

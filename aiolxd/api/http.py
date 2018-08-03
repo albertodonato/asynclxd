@@ -87,7 +87,8 @@ class Response:
             'etag': self.etag,
             'location': self.location,
             'type': self.type,
-            'metadata': self.metadata}
+            'metadata': self.metadata
+        }
         return pformat(data)
 
 
@@ -107,8 +108,14 @@ class ResponseError(Exception):
                 code=self.code, message=self.message))
 
 
-async def request(session, method, path, params=None, headers=None,
-                  content=None, upload=None):
+async def request(
+        session,
+        method,
+        path,
+        params=None,
+        headers=None,
+        content=None,
+        upload=None):
     """Perform an API request with a session.
 
     The Content-Type of the request is set based on whether :data:`content` or
@@ -133,7 +140,11 @@ async def request(session, method, path, params=None, headers=None,
         if isinstance(upload, UploadFilePath):
             upload = Path(upload).open()
     response = await session.request(
-        method, path, params=params, headers=headers, json=content,
+        method,
+        path,
+        params=params,
+        headers=headers,
+        json=content,
         data=upload)
     if upload:
         upload.close()

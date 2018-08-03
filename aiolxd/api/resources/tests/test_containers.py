@@ -2,12 +2,12 @@ from unittest import TestCase
 
 from asynctest import TestCase as AsyncTestCase
 
+from ...testing import FakeRemote
 from ..containers import (
     Container,
     Logfile,
     Snapshot,
 )
-from ...testing import FakeRemote
 
 
 class ContainerTests(AsyncTestCase):

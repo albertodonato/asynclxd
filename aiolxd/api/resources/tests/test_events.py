@@ -1,15 +1,15 @@
 from unittest import (
-    mock,
     TestCase,
+    mock,
 )
 
-from asynctest import TestCase as AsyncTestCase
 import iso8601
+from asynctest import TestCase as AsyncTestCase
 
 from ..events import (
     Event,
-    Events,
     EventHandler,
+    Events,
 )
 
 
@@ -21,7 +21,10 @@ class EventTests(TestCase):
         details = {
             'type': 'logging',
             'timestamp': timestamp,
-            "metadata": {'foo': 'bar'}}
+            "metadata": {
+                'foo': 'bar'
+            }
+        }
         event = Event(**details)
         self.assertEqual(event.type, 'logging')
         self.assertEqual(event.timestamp, iso8601.parse_date(timestamp))
@@ -42,9 +45,14 @@ class EventsTests(AsyncTestCase):
 
         await Events(remote)(None, types=['logging', 'operation'])
         self.assertEqual(
-            calls,
-            [((mock.ANY, 'events'),
-              {'params': {'type': 'logging,operation'}})])
+            calls, [
+                (
+                    (mock.ANY, 'events'), {
+                        'params': {
+                            'type': 'logging,operation'
+                        }
+                    })
+            ])
 
 
 class EventHandlerTests(AsyncTestCase):
@@ -60,11 +68,15 @@ class EventHandlerTests(AsyncTestCase):
         message = {
             'timestamp': '2015-06-09T19:07:24.379615253-06:00',
             'type': 'operation',
-            'metadata': {'some': 'data'}}
+            'metadata': {
+                'some': 'data'
+            }
+        }
         await handler.handle_message(message)
         self.assertEqual(
-            events,
-            [Event(
-                type='operation',
-                timestamp='2015-06-09T19:07:24.379615253-06:00',
-                metadata={'some': 'data'})])
+            events, [
+                Event(
+                    type='operation',
+                    timestamp='2015-06-09T19:07:24.379615253-06:00',
+                    metadata={'some': 'data'})
+            ])

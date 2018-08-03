@@ -1,8 +1,10 @@
 from asynctest import TestCase
 
+from ...testing import FakeRemote
 from ..containers import (
     Container,
-    Containers)
+    Containers,
+)
 from ..images import (
     Image,
     Images,
@@ -12,7 +14,6 @@ from ..profiles import (
     Profiles,
 )
 from ..storage import StoragePool
-from ...testing import FakeRemote
 
 
 class StoragePoolTest(TestCase):
@@ -26,7 +27,9 @@ class StoragePoolTest(TestCase):
         remote.profiles = Profiles(remote, '/profiles')
         storage_pool = StoragePool(remote, '/storage-pools/s')
         storage_pool.update_details(
-            {'used_by': ['/containers/c', '/images/i', '/profiles/p']})
+            {
+                'used_by': ['/containers/c', '/images/i', '/profiles/p']
+            })
         [container, image, profile] = storage_pool['used_by']
         self.assertIsInstance(container, Container)
         self.assertEqual(container.uri, '/containers/c')

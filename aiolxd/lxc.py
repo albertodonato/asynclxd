@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from xdg.BaseDirectory import xdg_config_home
 import yaml
+from xdg.BaseDirectory import xdg_config_home
 
 from .remote import (
     Remote,
@@ -35,7 +35,8 @@ def get_remotes(config_dir=None):
     return {
         name: Remote(conf.get('addr'), certs=_get_certs(config_dir, name))
         for name, conf in config.get('remotes', []).items()
-        if conf.get('protocol') in ('lxd', None)}
+        if conf.get('protocol') in ('lxd', None)
+    }
 
 
 def cli_config_dir():

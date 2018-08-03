@@ -19,7 +19,7 @@ class StoragePool(NamedResource):
     """API resources for storage pools"""
 
     related_resources = frozenset([
-        (('used_by',), _related_used_by),
+        (('used_by', ), _related_used_by),
     ])
 
     async def resources(self):

@@ -17,7 +17,7 @@ class ImageAlias(NamedResource):
     """API resource for image aliases."""
 
     related_resources = frozenset([
-        (('target',), _related_image),
+        (('target', ), _related_image),
     ])
 
 
@@ -38,7 +38,7 @@ class Image(Resource):
     id_attribute = 'fingerprint'
 
     related_resources = frozenset([
-        (('aliases',), _related_alias),
+        (('aliases', ), _related_alias),
     ])
 
     async def read(self, secret=None):

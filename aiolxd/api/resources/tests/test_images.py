@@ -1,13 +1,13 @@
 from asynctest import TestCase
 
+from ...http import Response
+from ...testing import FakeRemote
 from ..images import (
     Image,
     ImageAlias,
     Images,
 )
 from ..operations import Operation
-from ...http import Response
-from ...testing import FakeRemote
 
 
 class ImageAliasTest(TestCase):
@@ -47,7 +47,9 @@ class ImageTest(TestCase):
         await image.read(secret='abc')
         self.assertEqual(
             remote.calls,
-            [(('GET', '/images/i', {'secret': 'abc'}, None, None, None))])
+            [(('GET', '/images/i', {
+                'secret': 'abc'
+            }, None, None, None))])
 
     async def test_secret(self):
         """The secret() call returns an operation with a secret."""
@@ -55,8 +57,10 @@ class ImageTest(TestCase):
         metadata = {'some': 'details'}
         remote.responses.append(
             Response(
-                remote, 202, {'Location': '/operations/op'},
-                {'type': 'async', 'metadata': metadata}))
+                remote, 202, {'Location': '/operations/op'}, {
+                    'type': 'async',
+                    'metadata': metadata
+                }))
         image = Image(remote, '/images/i')
         operation = await image.secret()
         self.assertIsInstance(operation, Operation)
@@ -72,8 +76,10 @@ class ImageTest(TestCase):
         metadata = {'some': 'details'}
         remote.responses.append(
             Response(
-                remote, 202, {'Location': '/operations/op'},
-                {'type': 'async', 'metadata': metadata}))
+                remote, 202, {'Location': '/operations/op'}, {
+                    'type': 'async',
+                    'metadata': metadata
+                }))
         image = Image(remote, '/images/i')
         operation = await image.refresh()
         self.assertIsInstance(operation, Operation)
