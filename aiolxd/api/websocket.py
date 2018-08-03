@@ -8,7 +8,10 @@ from aiohttp import WSMsgType
 class WebsocketHandler(metaclass=abc.ABCMeta):
     """A websocket API handler."""
 
-    def __init__(self, websocket):
+    _ws = None
+
+    def set_websocket(self, websocket):
+        """Set the websocket for the handler."""
         self._ws = websocket
 
     @abc.abstractmethod
@@ -31,7 +34,7 @@ class WebsocketHandler(metaclass=abc.ABCMeta):
         """
 
 
-async def connect(session, path, handler_class, **handler_kwargs):
+async def connect(session, path, handler):
     """Connect to a websocket using the specified session.
 
     Appropriate methods on the handler are called when messages or errors are
@@ -40,13 +43,11 @@ async def connect(session, path, handler_class, **handler_kwargs):
     :param aiohttp.Session session: the session to perform the request.
     :param str path: the request path.
     :param dict params: optional query string parameters.
-    :param WebsocketHandler handler_class: a websocket handler class.
-    :param dict handler_kwargs: optional keyword arguments to pass to the
-        handler class.
+    :param WebsocketHandler handler: a websocket handler.
 
     """
     async with session.ws_connect(path) as websocket:
-        handler = handler_class(websocket, **handler_kwargs)
+        handler.set_websocket(websocket)
         async for message in websocket:
             if message.type == WSMsgType.TEXT:
                 await handler.handle_message(message.json())

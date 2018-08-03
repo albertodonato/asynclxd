@@ -40,11 +40,10 @@ class EventsTests(AsyncTestCase):
         remote = mock.Mock()
         remote.websocket = websocket
 
-        events = Events(remote)
-        await events(types=['logging', 'operation'])
+        await Events(remote)(None, types=['logging', 'operation'])
         self.assertEqual(
             calls,
-            [((EventHandler, 'events'),
+            [((mock.ANY, 'events'),
               {'params': {'type': 'logging,operation'}})])
 
 
@@ -52,15 +51,20 @@ class EventHandlerTests(AsyncTestCase):
 
     async def test_handle_message(self):
         """The handler handles messages and returns events."""
+        events = []
+
+        async def handle_event(event):
+            events.append(event)
+
+        handler = EventHandler(handle_event)
         message = {
             'timestamp': '2015-06-09T19:07:24.379615253-06:00',
             'type': 'operation',
             'metadata': {'some': 'data'}}
-        handler = EventHandler(None)
-        event = await handler.handle_message(message)
+        await handler.handle_message(message)
         self.assertEqual(
-            event,
-            Event(
+            events,
+            [Event(
                 type='operation',
                 timestamp='2015-06-09T19:07:24.379615253-06:00',
-                metadata={'some': 'data'}))
+                metadata={'some': 'data'})])

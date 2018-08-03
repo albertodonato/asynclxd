@@ -189,11 +189,10 @@ class Remote(Loggable):
             content=content, upload=upload)
         return await self._make_response(response)
 
-    def websocket(self, handler_class, path, params=None):
+    def websocket(self, handler, path, params=None):
         """"Connect a handler to a websocket URL.
 
-        :param .api.WebsocketHandler handler_class: handler class for the
-             websocket.
+        :param .api.WebsocketHandler handler: handler for the websocket.
         :param str path: the request path. If the path doesn't begin with a
             slash, it's prepended with the API version the remote is
             configured with.
@@ -205,9 +204,9 @@ class Remote(Loggable):
 
         path = self._full_path(path, params=params)
         self.logger.debug('{handler_class} {path}'.format(
-            handler_class=handler_class.__name__, path=path))
+            handler_class=handler.__class__.__name__, path=path))
         return self._loop.create_task(
-            websocket.connect(self._session, path, handler_class))
+            websocket.connect(self._session, path, handler))
 
     def _full_path(self, path, params=None):
         """Return the full path for a request."""

@@ -178,17 +178,19 @@ class RemoteTests(TestCase, TestWithFixtures):
         session = FakeSession(websocket=FakeWebSocket(messages=messages))
         self.remote._session_factory = lambda connector=None: session
 
-        messages = []
-
         class SampleHandler(WebsocketHandler):
 
+            def __init__(self):
+                self.messages = []
+
             async def handle_message(self, message):
-                messages.append(message)
+                self.messages.append(message)
 
+        handler = SampleHandler()
         async with self.remote:
-            await self.remote.websocket(SampleHandler, '/')
+            await self.remote.websocket(handler, '/')
 
-        self.assertEqual(messages, ['"foo"', '"bar"'])
+        self.assertEqual(handler.messages, ['"foo"', '"bar"'])
 
     async def test_websocket_not_in_session(self):
         """A SessionError is raised if websocket is not called in a session."""
