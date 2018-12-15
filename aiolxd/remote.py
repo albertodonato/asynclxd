@@ -14,9 +14,9 @@ to access resources exposed by the API.
 
 """
 
-import ssl
 from asyncio import get_event_loop
 from collections import namedtuple
+import ssl
 
 from aiohttp import (
     ClientSession,

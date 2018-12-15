@@ -1,10 +1,10 @@
 from unittest import mock
 
-import yaml
 from toolrack.testing import (
     TempDirFixture,
     TestCase,
 )
+import yaml
 
 from ..lxc import (
     cli_config_dir,

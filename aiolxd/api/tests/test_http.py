@@ -7,9 +7,9 @@ from fixtures import TestWithFixtures
 from toolrack.testing import TempDirFixture
 
 from ..http import (
+    request,
     Response,
     ResponseError,
-    request,
 )
 from ..resources.operations import Operation
 from ..testing import (

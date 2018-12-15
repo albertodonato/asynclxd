@@ -1,10 +1,10 @@
 from unittest import (
-    TestCase,
     mock,
+    TestCase,
 )
 
-import iso8601
 from asynctest import TestCase as AsyncTestCase
+import iso8601
 
 from ..events import (
     Event,

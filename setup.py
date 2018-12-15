@@ -13,44 +13,30 @@ from aiolxd import (
 tests_require = ['asynctest']
 
 config = {
-    'name':
-    'aiolxd',
-    'version':
-    __version__,
-    'license':
-    'LGPLv3+',
-    'description':
-    description,
-    'long_description':
-    Path('README.rst').read_text(),
-    'author':
-    'Alberto Donato',
-    'author_email':
-    'alberto.donato@gmail.com',
-    'maintainer':
-    'Alberto Donato',
-    'maintainer_email':
-    'alberto.donato@gmail.com',
-    'url':
-    'https://github.com/albertodonato/aiolxd',
-    'packages':
-    find_packages(),
-    'include_package_data':
-    True,
+    'name': 'aiolxd',
+    'version': __version__,
+    'license': 'LGPLv3+',
+    'description': description,
+    'long_description': Path('README.rst').read_text(),
+    'author': 'Alberto Donato',
+    'author_email': 'alberto.donato@gmail.com',
+    'maintainer': 'Alberto Donato',
+    'maintainer_email': 'alberto.donato@gmail.com',
+    'url': 'https://github.com/albertodonato/aiolxd',
+    'packages': find_packages(),
+    'include_package_data': True,
     'entry_points': {
         'console_scripts': []
     },
-    'test_suite':
-    'aiolxd',
-    'install_requires':
-    ['aiohttp >=3.1.0', 'attr', 'iso8601', 'pyxdg', 'PyYAML', 'toolrack'],
-    'tests_require':
-    tests_require,
+    'test_suite': 'aiolxd',
+    'install_requires': [
+        'aiohttp >=3.1.0', 'attr', 'iso8601', 'pyxdg', 'PyYAML', 'toolrack'
+    ],
+    'tests_require': tests_require,
     'extras_require': {
         'testing': tests_require
     },
-    'keywords':
-    'LXD rest API',
+    'keywords': 'LXD rest API',
     'classifiers': [
         'Development Status :: 3 - Alpha',
         (

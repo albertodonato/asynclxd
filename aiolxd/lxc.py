@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-import yaml
 from xdg.BaseDirectory import xdg_config_home
+import yaml
 
 from .remote import (
     Remote,

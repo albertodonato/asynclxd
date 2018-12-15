@@ -1,7 +1,7 @@
 """API testing helpers."""
 
-import io
 from asyncio import get_event_loop
+import io
 from json import dumps as json_dumps
 
 from aiohttp import (
