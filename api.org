@@ -14,7 +14,7 @@
 ****** DONE /1.0/containers/<name>/logs/<logfile>
 ***** TODO /1.0/containers/<name>/metadata
 ***** TODO /1.0/containers/<name>/metadata/templates
-*** TODO /1.0/events
+*** DONE /1.0/events
 *** TODO /1.0/images
 **** DONE /1.0/images/<fingerprint>
 ***** TODO /1.0/images/<fingerprint>/export

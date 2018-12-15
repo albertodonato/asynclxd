@@ -26,7 +26,7 @@ class RemoteURITests(TestCase):
         """An invalid URI raises an error."""
         with self.assertRaises(InvalidRemoteURI) as cm:
             RemoteURI('https://example.com:not-a-port')
-        self.assertIn('invalid literal for int', str(cm.exception))
+        self.assertIn("port can't be converted to integer", str(cm.exception))
 
     def test_invalid_scheme(self):
         """Host can't be specified for UNIX socket type."""
