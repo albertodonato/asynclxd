@@ -15,8 +15,12 @@ to access resources exposed by the API.
 """
 
 from asyncio import get_event_loop
-from collections import namedtuple
+from pathlib import Path
 import ssl
+from typing import (
+    NamedTuple,
+    Optional,
+)
 
 from aiohttp import (
     ClientSession,
@@ -33,8 +37,13 @@ from .api import (
 )
 from .uri import RemoteURI
 
-#: Certificates for SSL connection.
-SSLCerts = namedtuple('SSLCerts', ['server_cert', 'client_cert', 'client_key'])
+
+class SSLCerts(NamedTuple):
+    """Certificates for SSL connection."""
+
+    server_cert: Path
+    client_cert: Optional[Path] = None
+    client_key: Optional[Path] = None
 
 
 class SessionError(Exception):
@@ -94,8 +103,7 @@ class Remote(Loggable):
         self._remote = self  # for the Collection wrapper
 
     def __repr__(self):
-        return '{cls}({uri!r})'.format(
-            cls=self.__class__.__name__, uri=self.uri)
+        return f'{self.__class__.__name__}({repr(self.uri)})'
 
     async def __aenter__(self):
         self.open()
@@ -107,7 +115,7 @@ class Remote(Loggable):
     @property
     def resource_uri(self):
         """Return the URI for the base resource of the Remote."""
-        return '/{version}'.format(version=self.version)
+        return f'/{self.version}'
 
     def open(self):
         """Start a session with the remote."""
@@ -186,10 +194,7 @@ class Remote(Loggable):
             raise SessionError('Not in a session')
 
         self.logger.debug(
-            '{method} {path} {content}'.format(
-                method=method,
-                path=self._full_path(path, params=params),
-                content=content))
+            f'{method} {self._full_path(path, params=params)} {content}')
         path = self._full_path(path)
         response = await http.request(
             self._session,
@@ -215,9 +220,7 @@ class Remote(Loggable):
             raise SessionError('Not in a session')
 
         path = self._full_path(path, params=params)
-        self.logger.debug(
-            '{handler_class} {path}'.format(
-                handler_class=handler.__class__.__name__, path=path))
+        self.logger.debug(f'{handler.__class__.__name__} {path}')
         return self._loop.create_task(
             websocket.connect(self._session, path, handler))
 
@@ -226,7 +229,7 @@ class Remote(Loggable):
         if not path:
             path = '/' + self.version
         elif not path.startswith('/'):
-            path = '/{version}/{path}'.format(version=self.version, path=path)
+            path = f'/{self.version}/{path}'
         return self.uri.request_path(path, params=params)
 
     async def _make_response(self, http_response):

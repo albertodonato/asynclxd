@@ -104,8 +104,7 @@ class ResponseError(Exception):
         self.code = code
         self.message = message
         super().__init__(
-            'API request failed with {code}: {message}'.format(
-                code=self.code, message=self.message))
+            f'API request failed with {self.code}: {self.message}')
 
 
 async def request(

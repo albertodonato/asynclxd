@@ -31,7 +31,7 @@ class Collection:
         base_uri = getattr(instance, 'resource_uri', None)
         if not base_uri:
             base_uri = instance.uri
-        uri = '{uri}/{name}'.format(uri=base_uri, name=self.name)
+        uri = f'{base_uri}/{self.name}'
         return self.resource_collection(instance._remote, uri)
 
 
@@ -46,8 +46,7 @@ class ResourceCollection(metaclass=abc.ABCMeta):
         self._raw = raw
 
     def __repr__(self):
-        return '{cls}({uri!r})'.format(
-            cls=self.__class__.__name__, uri=self.uri)
+        return f'{self.__class__.__name__}({repr(self.uri)})'
 
     def raw(self):
         """Return a copy of this collection which returns raw responses."""
@@ -119,8 +118,7 @@ class ResourceCollection(metaclass=abc.ABCMeta):
         if resource_id.startswith(self.uri):
             # strip prefix
             resource_id = resource_id[len(self.uri) + 1:]
-        return '{uri}/{resource_id}'.format(
-            uri=self.uri, resource_id=quote(resource_id))
+        return f'{self.uri}/{quote(resource_id)}'
 
 
 class Resource(metaclass=abc.ABCMeta):
@@ -145,8 +143,7 @@ class Resource(metaclass=abc.ABCMeta):
         self.uri = uri
 
     def __repr__(self):
-        return '{cls}({uri!r})'.format(
-            cls=self.__class__.__name__, uri=self.uri)
+        return f'{self.__class__.__name__}({repr(self.uri)})'
 
     def __eq__(self, other):
         return (self._remote, self.uri) == (other._remote, other.uri)
@@ -238,7 +235,7 @@ class Resource(metaclass=abc.ABCMeta):
 
     def _uri(self, path):
         """Return a URI below the resource URI."""
-        return '{}/{}'.format(self.uri, path)
+        return f'{self.uri}/{path}'
 
     def _get_headers(self, etag=False):
         """Return headers for a request."""

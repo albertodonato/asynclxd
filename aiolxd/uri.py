@@ -14,8 +14,7 @@ class InvalidRemoteURI(Exception):
     """
 
     def __init__(self, uri, message):
-        super().__init__(
-            'Invalid URI {uri}: {message}'.format(uri=uri, message=message))
+        super().__init__(f'Invalid URI {uri}: {message}')
 
 
 class RemoteURI:

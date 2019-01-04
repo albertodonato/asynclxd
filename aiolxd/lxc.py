@@ -47,7 +47,7 @@ def cli_config_dir():
 def _get_certs(config_dir, remote_name):
     """Return SSLCerts for the remote, or None if certs are not found."""
     config_dir = Path(config_dir)
-    server_cert = config_dir / 'servercerts/{}.crt'.format(remote_name)
+    server_cert = config_dir / f'servercerts/{remote_name}.crt'
     client_key = config_dir / 'client.key'
     client_cert = config_dir / 'client.crt'
 
