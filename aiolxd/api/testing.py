@@ -121,12 +121,19 @@ class FakeStreamReader(ContentStream):
 
     def __init__(self, stream):
         self._stream = stream
+        self._exception = None
 
     async def read(self):
         return self._stream.read()
 
     def iter_any(self):
         return FakeStreamIterator(self._stream)
+
+    def exception(self):
+        return self._exception
+
+    def set_exception(self, exc):
+        self._exception = exc
 
 
 # register StringIO since it's used in tests
