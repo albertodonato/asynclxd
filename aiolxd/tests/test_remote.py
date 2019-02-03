@@ -5,9 +5,7 @@ from aiohttp import (
     TCPConnector,
     UnixConnector,
 )
-from asynctest import TestCase
-from fixtures import TestWithFixtures
-from toolrack.testing import TempDirFixture
+import pytest
 
 from ..api.resources import Events
 from ..api.testing import (
@@ -24,170 +22,181 @@ from ..remote import (
 )
 
 
-class RemoteTests(TestCase, TestWithFixtures):
+@pytest.fixture
+def remote(event_loop):
+    yield Remote('https://example.com:8443', loop=event_loop)
 
-    def setUp(self):
-        super().setUp()
-        self.remote = Remote('https://example.com:8443')
 
-    def test_repr(self):
+@pytest.fixture
+def make_fake_session(remote):
+
+    def fake_session(_remote=remote, **kwargs):
+        session = FakeSession(**kwargs)
+        _remote._session_factory = lambda connector=None: session
+        return session
+
+    yield fake_session
+
+
+class TestRemote:
+
+    def test_repr(self, remote):
         """The object repr includes the URI."""
-        self.assertEqual(
-            repr(self.remote), "Remote('https://example.com:8443/')")
+        assert repr(remote) == "Remote('https://example.com:8443/')"
 
-    def test_resource_uri(self):
+    def test_resource_uri(self, remote):
         """THe resource_uri property returns the base resource URI."""
-        self.assertEqual(self.remote.resource_uri, '/1.0')
+        assert remote.resource_uri == '/1.0'
 
-    async def test_context_manager(self):
+    @pytest.mark.asyncio
+    async def test_context_manager(self, remote, make_fake_session):
         """A session is created when using the class as context manager."""
-        self.remote._session_factory = FakeSession
+        make_fake_session()
 
-        self.assertIsNone(self.remote._session)
-        async with self.remote:
-            self.assertIsInstance(self.remote._session, FakeSession)
-        self.assertIsNone(self.remote._session)
+        assert remote._session is None
+        async with remote:
+            assert isinstance(remote._session, FakeSession)
+        assert remote._session is None
 
-    async def test_open(self):
+    @pytest.mark.asyncio
+    async def test_open(self, remote):
         """The open method creates a session."""
-        self.remote.open()
-        self.assertIsNotNone(self.remote._session)
-        await self.remote.close()
+        remote.open()
+        assert remote._session is not None
+        await remote.close()
 
-    async def test_open_already_in_session(self):
+    @pytest.mark.asyncio
+    async def test_open_already_in_session(self, remote):
         """A SessionError is raised if already in a session."""
-        self.remote.open()
-        with self.assertRaises(SessionError) as cm:
-            self.remote.open()
-        self.assertEqual(str(cm.exception), 'Already in a session')
-        await self.remote.close()
+        remote.open()
+        with pytest.raises(SessionError) as error:
+            remote.open()
+        assert str(error.value) == 'Already in a session'
+        await remote.close()
 
-    async def test_close(self):
+    @pytest.mark.asyncio
+    async def test_close(self, remote):
         """The close method ends a session."""
-        self.remote.open()
-        await self.remote.close()
-        self.assertIsNone(self.remote._session)
+        remote.open()
+        await remote.close()
+        assert remote._session is None
 
-    async def test_close_not_in_session(self):
+    @pytest.mark.asyncio
+    async def test_close_not_in_session(self, remote):
         """A SessionError is raised if not a session."""
-        with self.assertRaises(SessionError) as cm:
-            await self.remote.close()
-        self.assertEqual(str(cm.exception), 'Not in a session')
+        with pytest.raises(SessionError) as error:
+            await remote.close()
+        assert str(error.value) == 'Not in a session'
 
-    async def test_events(self):
+    def test_events(self, remote):
         """The events method returns an Events instance."""
-        self.assertIsInstance(self.remote.events, Events)
+        assert isinstance(remote.events, Events)
 
-    async def test_request(self):
+    @pytest.mark.asyncio
+    async def test_request(self, remote, make_fake_session):
         """Requests can be performed with the server."""
-        session = FakeSession(responses=[make_response_content(['response'])])
-        self.remote._session_factory = lambda connector=None: session
+        session = make_fake_session(
+            responses=[make_response_content(['response'])])
+        async with remote:
+            response = await remote.request('GET', '/')
 
-        async with self.remote:
-            response = await self.remote.request('GET', '/')
-        self.assertEqual(
-            session.calls,
-            [('GET', 'https://example.com:8443', None, {}, None)])
-        self.assertEqual(response.metadata, ['response'])
+        assert session.calls == [
+            ('GET', 'https://example.com:8443', None, {}, None)
+        ]
+        assert response.metadata == ['response']
 
-    async def test_request_with_content(self):
+    @pytest.mark.asyncio
+    async def test_request_with_content(self, remote, make_fake_session):
         """Requests can include content."""
-        session = FakeSession(responses=[make_response_content(['response'])])
-        self.remote._session_factory = lambda connector=None: session
-
+        session = make_fake_session(
+            responses=[make_response_content(['response'])])
         content = {'some': 'content'}
-        async with self.remote:
-            await self.remote.request('POST', '/', content=content)
-        self.assertEqual(
-            session.calls, [
-                (
-                    'POST', 'https://example.com:8443', None, {
-                        'Content-Type': 'application/json'
-                    }, content)
-            ])
+        async with remote:
+            await remote.request('POST', '/', content=content)
+        assert session.calls == [
+            (
+                'POST', 'https://example.com:8443', None, {
+                    'Content-Type': 'application/json'
+                }, content)
+        ]
 
-    async def test_request_with_params(self):
+    @pytest.mark.asyncio
+    async def test_request_with_params(self, remote, make_fake_session):
         """Requests can include params."""
-        session = FakeSession(responses=[make_response_content(['response'])])
-        self.remote._session_factory = lambda connector=None: session
-
+        session = make_fake_session(
+            responses=[make_response_content(['response'])])
         params = {'a': 'param'}
-        async with self.remote:
-            await self.remote.request('POST', '/', params=params)
-        self.assertEqual(
-            session.calls,
-            [('POST', 'https://example.com:8443', params, {}, None)])
+        async with remote:
+            await remote.request('POST', '/', params=params)
+        assert session.calls == [
+            ('POST', 'https://example.com:8443', params, {}, None)
+        ]
 
-    async def test_remote_with_upload(self):
+    @pytest.mark.asyncio
+    async def test_remote_with_upload(self, tmpdir, remote, make_fake_session):
         """Request can include a file to upload."""
-        tempdir = self.useFixture(TempDirFixture())
-        upload_file = Path(tempdir.mkfile(content='data'))
-        session = FakeSession(responses=[make_response_content(['response'])])
-        self.remote._session_factory = lambda connector=None: session
+        upload_file = Path(tmpdir / 'upload')
+        upload_file.write_text('data')
+        session = make_fake_session(
+            responses=[make_response_content(['response'])])
+        async with remote:
+            await remote.request('POST', '/', upload=upload_file)
+        assert session.calls == [
+            (
+                'POST', 'https://example.com:8443', None, {
+                    'Content-Type': 'application/octet-stream'
+                }, 'data')
+        ]
 
-        async with self.remote:
-            await self.remote.request('POST', '/', upload=upload_file)
-        self.assertEqual(
-            session.calls, [
-                (
-                    'POST', 'https://example.com:8443', None, {
-                        'Content-Type': 'application/octet-stream'
-                    }, 'data')
-            ])
-
-    async def test_request_with_headers(self):
+    @pytest.mark.asyncio
+    async def test_request_with_headers(self, remote, make_fake_session):
         """Requests can include content."""
-        session = FakeSession(responses=[make_response_content(['response'])])
-        self.remote._session_factory = lambda connector=None: session
+        session = make_fake_session(
+            responses=[make_response_content(['response'])])
+        async with remote:
+            await remote.request('POST', '/', headers={'X-Sample': 'value'})
+        assert session.calls == [
+            (
+                'POST', 'https://example.com:8443', None, {
+                    'X-Sample': 'value'
+                }, None)
+        ]
 
-        async with self.remote:
-            await self.remote.request(
-                'POST', '/', headers={'X-Sample': 'value'})
-        self.assertEqual(
-            session.calls, [
-                (
-                    'POST', 'https://example.com:8443', None, {
-                        'X-Sample': 'value'
-                    }, None)
-            ])
-
-    async def test_request_binary_response(self):
+    @pytest.mark.asyncio
+    async def test_request_binary_response(self, remote, make_fake_session):
         """Requests can include content."""
         content = StringIO('some content')
-        session = FakeSession(responses=[make_http_response(content=content)])
-        self.remote._session_factory = lambda connector=None: session
-
+        make_fake_session(responses=[make_http_response(content=content)])
         out_stream = StringIO()
-        async with self.remote:
-            response = await self.remote.request('GET', '/')
+        async with remote:
+            response = await remote.request('GET', '/')
             await response.write_content(out_stream)
-        self.assertEqual(out_stream.getvalue(), 'some content')
+        assert out_stream.getvalue() == 'some content'
 
-    async def test_request_not_in_session(self):
+    @pytest.mark.asyncio
+    async def test_request_not_in_session(self, remote):
         """A SessionError is raised if request is not called in a session."""
-        with self.assertRaises(SessionError) as cm:
-            await self.remote.request('GET', '/')
-        self.assertEqual(str(cm.exception), 'Not in a session')
+        with pytest.raises(SessionError) as error:
+            await remote.request('GET', '/')
+        assert str(error.value) == 'Not in a session'
 
-    async def test_request_relative_path(self):
+    @pytest.mark.asyncio
+    async def test_request_relative_path(self, remote, make_fake_session):
         """If request path is relative, it's prefixed with the API version."""
-        session = FakeSession(responses=[make_response_content()])
-        self.remote._session_factory = lambda connector=None: session
+        session = make_fake_session(responses=[make_response_content()])
+        async with remote:
+            await remote.request('GET', 'relative-path')
+        assert session.calls == [
+            (
+                'GET', 'https://example.com:8443/1.0/relative-path', None, {},
+                None)
+        ]
 
-        async with self.remote:
-            await self.remote.request('GET', 'relative-path')
-        self.assertEqual(
-            session.calls, [
-                (
-                    'GET', 'https://example.com:8443/1.0/relative-path', None,
-                    {}, None)
-            ])
-
-    async def test_websocket(self):
+    @pytest.mark.asyncio
+    async def test_websocket(self, remote, make_fake_session):
         """Websocket connections can be performed with the server."""
         messages = [FakeWSMessage('foo'), FakeWSMessage('bar')]
-        session = FakeSession(websocket=FakeWebSocket(messages=messages))
-        self.remote._session_factory = lambda connector=None: session
+        make_fake_session(websocket=FakeWebSocket(messages=messages))
 
         class SampleHandler(WebsocketHandler):
 
@@ -198,75 +207,74 @@ class RemoteTests(TestCase, TestWithFixtures):
                 self.messages.append(message)
 
         handler = SampleHandler()
-        async with self.remote:
-            await self.remote.websocket(handler, '/')
+        async with remote:
+            await remote.websocket(handler, '/')
 
-        self.assertEqual(handler.messages, ['"foo"', '"bar"'])
+        assert handler.messages == ['"foo"', '"bar"']
 
-    async def test_websocket_not_in_session(self):
+    @pytest.mark.asyncio
+    async def test_websocket_not_in_session(self, remote):
         """A SessionError is raised if websocket is not called in a session."""
-        with self.assertRaises(SessionError) as cm:
-            await self.remote.websocket(object, '/')
-        self.assertEqual(str(cm.exception), 'Not in a session')
+        with pytest.raises(SessionError) as error:
+            await remote.websocket(object, '/')
+        assert str(error.value) == 'Not in a session'
 
-    async def test_connector_unix(self):
+    @pytest.mark.asyncio
+    async def test_connector_unix(self, make_fake_session):
         """If the URI is for a UNIX socket, a UnixConnector is used."""
         remote = Remote('unix:///socket/path')
+        make_fake_session(_remote=remote)
         remote._session_factory = FakeSession
         async with remote:
-            self.assertIsInstance(remote._session.connector, UnixConnector)
-            self.assertEqual(remote._session.connector._path, '/socket/path')
+            assert isinstance(remote._session.connector, UnixConnector)
+            assert remote._session.connector._path == '/socket/path'
 
-    async def test_connector_https(self):
+    @pytest.mark.asyncio
+    async def test_connector_https(self, remote):
         """If the URI is https, a TCPConnector is used."""
-        self.remote._session_factory = FakeSession
-        async with self.remote:
-            self.assertIsInstance(self.remote._session.connector, TCPConnector)
-            self.assertIsNone(self.remote._session.connector._ssl)
+        async with remote:
+            assert isinstance(remote._session.connector, TCPConnector)
+            assert remote._session.connector._ssl is None
 
-    async def test_api_versions(self):
+    @pytest.mark.asyncio
+    async def test_api_versions(self, remote, make_fake_session):
         """It's possible to query for API versions."""
-        session = FakeSession(
+        session = make_fake_session(
             responses=[make_response_content(['/1.0', '/2.0'])])
-        self.remote._session_factory = lambda connector=None: session
+        async with remote:
+            response = await remote.api_versions()
+        assert session.calls == [
+            ('GET', 'https://example.com:8443', None, {}, None)
+        ]
+        assert response == ['1.0', '2.0']
 
-        async with self.remote:
-            response = await self.remote.api_versions()
-        self.assertEqual(
-            session.calls,
-            [('GET', 'https://example.com:8443', None, {}, None)])
-        self.assertEqual(response, ['1.0', '2.0'])
-
-    async def test_info(self):
+    @pytest.mark.asyncio
+    async def test_info(self, remote, make_fake_session):
         """It's possible to query for server information."""
         info = {'api_extensions': ['ext1', 'ext2'], 'api_version': '1.0'}
-        session = FakeSession(responses=[make_response_content(info)])
-        self.remote._session_factory = lambda connector=None: session
+        session = make_fake_session(responses=[make_response_content(info)])
+        async with remote:
+            response = await remote.info()
+        assert session.calls == [
+            ('GET', 'https://example.com:8443/1.0', None, {}, None)
+        ]
+        assert response == info
 
-        async with self.remote:
-            response = await self.remote.info()
-        self.assertEqual(
-            session.calls,
-            [('GET', 'https://example.com:8443/1.0', None, {}, None)])
-        self.assertEqual(response, info)
-
-    async def test_resources(self):
+    @pytest.mark.asyncio
+    async def test_resources(self, remote, make_fake_session):
         """It's possible to query for server resources."""
         resources = {'memory': {'total': 100, 'used': 50}}
-        session = FakeSession(responses=[make_response_content(resources)])
-        self.remote._session_factory = lambda connector=None: session
+        session = make_fake_session(
+            responses=[make_response_content(resources)])
+        async with remote:
+            response = await remote.resources()
+        assert session.calls == [
+            ('GET', 'https://example.com:8443/1.0/resources', None, {}, None)
+        ]
+        assert response == resources
 
-        async with self.remote:
-            response = await self.remote.resources()
-        self.assertEqual(
-            session.calls, [
-                (
-                    'GET', 'https://example.com:8443/1.0/resources', None, {},
-                    None)
-            ])
-        self.assertEqual(response, resources)
-
-    async def test_config_read(self):
+    @pytest.mark.asyncio
+    async def test_config_read(self, remote, make_fake_session):
         """It's possible to read the server configuration."""
         info = {
             'config': {
@@ -274,46 +282,42 @@ class RemoteTests(TestCase, TestWithFixtures):
             },
             'api_version': '1.0'
         }
-        session = FakeSession(responses=[make_response_content(info)])
-        self.remote._session_factory = lambda connector=None: session
+        session = make_fake_session(responses=[make_response_content(info)])
+        async with remote:
+            config = await remote.config()
+        assert session.calls == [
+            ('GET', 'https://example.com:8443/1.0', None, {}, None)
+        ]
+        assert config == info['config']
 
-        async with self.remote:
-            config = await self.remote.config()
-        self.assertEqual(
-            session.calls,
-            [('GET', 'https://example.com:8443/1.0', None, {}, None)])
-        self.assertEqual(config, info['config'])
-
-    async def test_config_update(self):
+    @pytest.mark.asyncio
+    async def test_config_update(self, remote, make_fake_session):
         """It's possible to update the server configuration."""
         options = {'core.https_address': '[]:8443'}
-        session = FakeSession(responses=[make_response_content({})])
-        self.remote._session_factory = lambda connector=None: session
-        async with self.remote:
-            await self.remote.config(options=options)
-        self.assertEqual(
-            session.calls, [
-                (
-                    'PATCH', 'https://example.com:8443/1.0', None, {
-                        'Content-Type': 'application/json'
-                    }, {
-                        'config': options
-                    })
-            ])
+        session = make_fake_session(responses=[make_response_content({})])
+        async with remote:
+            await remote.config(options=options)
+        assert session.calls == [
+            (
+                'PATCH', 'https://example.com:8443/1.0', None, {
+                    'Content-Type': 'application/json'
+                }, {
+                    'config': options
+                })
+        ]
 
-    async def test_config_replace(self):
+    @pytest.mark.asyncio
+    async def test_config_replace(self, remote, make_fake_session):
         """It's possible to replace the server configuration."""
         options = {'core.https_address': '[]:8443'}
-        session = FakeSession(responses=[make_response_content({})])
-        self.remote._session_factory = lambda connector=None: session
-        async with self.remote:
-            await self.remote.config(options=options, replace=True)
-        self.assertEqual(
-            session.calls, [
-                (
-                    'PUT', 'https://example.com:8443/1.0', None, {
-                        'Content-Type': 'application/json'
-                    }, {
-                        'config': options
-                    })
-            ])
+        session = make_fake_session(responses=[make_response_content({})])
+        async with remote:
+            await remote.config(options=options, replace=True)
+        assert session.calls == [
+            (
+                'PUT', 'https://example.com:8443/1.0', None, {
+                    'Content-Type': 'application/json'
+                }, {
+                    'config': options
+                })
+        ]

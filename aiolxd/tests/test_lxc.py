@@ -1,9 +1,6 @@
-from unittest import mock
+from pathlib import Path
 
-from toolrack.testing import (
-    TempDirFixture,
-    TestCase,
-)
+import pytest
 import yaml
 
 from ..lxc import (
@@ -12,38 +9,73 @@ from ..lxc import (
 )
 
 
-class GetRemotesTests(TestCase):
+@pytest.fixture
+def config_dir(tmpdir):
+    config_dir = Path(tmpdir / 'config')
+    config_dir.mkdir()
+    yield config_dir
 
-    def setUp(self):
-        super().setUp()
-        self.tempdir = self.useFixture(TempDirFixture())
 
-    def make_config(self, config):
-        return self.tempdir.mkfile(
-            path='config.yml', content=yaml.dump(config))
+@pytest.fixture
+def mock_config_dir(mocker, config_dir):
+    mock = mocker.patch('aiolxd.lxc.cli_config_dir')
+    mock.return_value = config_dir
+    yield mock
 
-    @mock.patch('aiolxd.lxc.cli_config_dir')
+
+@pytest.fixture
+def make_config(config_dir):
+
+    def write(config):
+        config_file = config_dir / 'config.yml'
+        config_file.write_text(yaml.dump(config))
+
+    yield write
+
+
+@pytest.fixture
+def server_cert(config_dir):
+    servercerts_dir = config_dir / 'servercerts'
+    servercerts_dir.mkdir()
+    cert_file = (servercerts_dir / 'r.crt')
+    cert_file.write_text('server cert')
+    yield cert_file
+
+
+@pytest.fixture
+def client_certs(config_dir):
+    key_file = (config_dir / 'client.key')
+    key_file.write_text('client key')
+    cert_file = (config_dir / 'client.crt')
+    cert_file.write_text('client cert')
+    yield key_file, cert_file
+
+
+@pytest.mark.usefixtures('mock_config_dir')
+class TestGetRemotes:
+
     def test_config_dir_default(self, mock_config_dir):
         """By default, the 'lxc' CLI config dir is used."""
-        mock_config_dir.return_value = '/some/dir'
         get_remotes()
         mock_config_dir.assert_called()
 
-    def test_config_dir_not_existent(self):
+    def test_config_dir_not_existent(self, config_dir):
         """If the config dir doesn't exist, an empty dict is returned."""
-        self.assertEqual({}, get_remotes(config_dir='/'))
+        config_dir.rmdir()
+        assert get_remotes() == {}
 
-    def test_no_config(self):
+    def test_no_config(self, config_dir):
         """An empty dict is returned if no config file is found."""
-        self.assertEqual(get_remotes(config_dir='/not/here'), {})
+        assert get_remotes() == {}
 
-    def test_no_remotes(self):
-        self.make_config({'remotes': {}})
-        self.assertEqual(get_remotes(config_dir=self.tempdir.path), {})
+    def test_no_remotes(self, config_dir, make_config):
+        """An empty dict is returned if no remotes are defined."""
+        make_config({'remotes': {}})
+        assert get_remotes() == {}
 
-    def test_remotes(self):
+    def test_remotes(self, make_config):
         """LXD remotes are returned."""
-        self.make_config(
+        make_config(
             {
                 'remotes': {
                     'local': {
@@ -55,21 +87,20 @@ class GetRemotesTests(TestCase):
                     }
                 }
             })
-        remotes = get_remotes(config_dir=self.tempdir.path)
-        self.assertCountEqual(remotes, ['local', 'other'])
-        self.assertEqual(str(remotes['local'].uri), 'unix:///path/to/socket')
-        self.assertEqual(
-            str(remotes['other'].uri), 'https://example.com:8443/')
+        remotes = get_remotes()
+        assert sorted(remotes) == ['local', 'other']
+        assert str(remotes['local'].uri) == 'unix:///path/to/socket'
+        assert str(remotes['other'].uri) == 'https://example.com:8443/'
 
-    def test_default_unix_socket_path(self):
+    def test_default_unix_socket_path(self, make_config):
         """If a path is not specified for the socket, the default is used."""
-        self.make_config({'remotes': {'local': {'addr': 'unix://'}}})
-        remotes = get_remotes(config_dir=self.tempdir.path)
-        self.assertEqual(remotes['local'].uri.path, '/var/lib/lxd/unix.socket')
+        make_config({'remotes': {'local': {'addr': 'unix://'}}})
+        remotes = get_remotes()
+        assert remotes['local'].uri.path == '/var/lib/lxd/unix.socket'
 
-    def test_ignore_non_lxd(self):
+    def test_ignore_non_lxd(self, make_config):
         """Remotes that don't use the 'lxd' protocol are ignored."""
-        self.make_config(
+        make_config(
             {
                 'remotes': {
                     'local': {
@@ -81,46 +112,45 @@ class GetRemotesTests(TestCase):
                     }
                 }
             })
-        remotes = get_remotes(config_dir=self.tempdir.path)
-        self.assertCountEqual(remotes, ['local'])
+        remotes = get_remotes()
+        assert list(remotes) == ['local']
 
-    def test_remote_no_certificates(self):
+    def test_remote_no_certificates(self, make_config):
         """No certificates are loaded for UNIX remotes."""
-        self.make_config({'remotes': {'local': {'addr': 'unix://'}}})
-        remotes = get_remotes(config_dir=self.tempdir.path)
-        self.assertIsNone(remotes['local'].certs)
+        make_config({'remotes': {'local': {'addr': 'unix://'}}})
+        remotes = get_remotes()
+        assert remotes['local'].certs is None
 
-    def test_remote_no_certificates_if_no_server_cert(self):
+    def test_remote_no_certificates_if_no_server_cert(
+            self, config_dir, make_config):
         """No certificates are loaded if no server cert is found."""
-        self.make_config({'remotes': {'r': {'addr': 'https://1.2.3.4:8443'}}})
-        self.tempdir.mkfile(path='client.crt', content='client cert')
-        self.tempdir.mkfile(path='client.key', content='client key')
-        remotes = get_remotes(config_dir=self.tempdir.path)
-        self.assertIsNone(remotes['r'].certs)
+        make_config({'remotes': {'r': {'addr': 'https://1.2.3.4:8443'}}})
+        (config_dir / 'client.crt').write_text('client cert')
+        (config_dir / 'client.key').write_text('client key')
+        remotes = get_remotes()
+        assert remotes['r'].certs is None
 
-    def test_remote_with_certs_if_server_cert(self):
+    def test_remote_with_certs_if_server_cert(
+            self, config_dir, make_config, server_cert):
         """Remote certificates are set if server certificate is found."""
-        self.make_config({'remotes': {'r': {'addr': 'https://1.2.3.4:8443'}}})
-        self.tempdir.mkfile(path='servercerts/r.crt', content='server cert')
-        remotes = get_remotes(config_dir=self.tempdir.path)
-        self.assertIsNotNone(remotes['r'].certs.server_cert)
+        make_config({'remotes': {'r': {'addr': 'https://1.2.3.4:8443'}}})
+        remotes = get_remotes()
+        assert remotes['r'].certs.server_cert is not None
 
-    def test_remote_with_certs(self):
+    def test_remote_with_certs(
+            self, config_dir, make_config, server_cert, client_certs):
         """Remote certificates are set if found."""
-        self.make_config({'remotes': {'r': {'addr': 'https://1.2.3.4:8443'}}})
-        self.tempdir.mkfile(path='servercerts/r.crt', content='server cert')
-        self.tempdir.mkfile(path='client.crt', content='client cert')
-        self.tempdir.mkfile(path='client.key', content='client key')
-        remotes = get_remotes(config_dir=self.tempdir.path)
+        make_config({'remotes': {'r': {'addr': 'https://1.2.3.4:8443'}}})
+        remotes = get_remotes()
         certs = remotes['r'].certs
-        self.assertIsNotNone(certs.server_cert)
-        self.assertIsNotNone(certs.client_cert)
-        self.assertIsNotNone(certs.client_key)
+        assert certs.server_cert is not None
+        assert certs.client_cert is not None
+        assert certs.client_key is not None
 
 
-class CLIConfigDirTests(TestCase):
+class TestCLIConfigDir:
 
     def test_cli_config_dir(self):
         """cli_config_dir returns the directory for the lxc CLI config."""
         config_dir = cli_config_dir()
-        self.assertEqual(config_dir.name, 'lxc')
+        assert config_dir.name == 'lxc'

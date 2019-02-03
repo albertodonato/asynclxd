@@ -1,4 +1,4 @@
-from asynctest import TestCase
+import pytest
 
 from ...testing import FakeRemote
 from ..containers import Container
@@ -9,7 +9,7 @@ from ..operations import (
 )
 
 
-class OperationTest(TestCase):
+class TestOperation:
 
     def test_related_resources(self):
         """Related resources are returned as instances."""
@@ -22,43 +22,45 @@ class OperationTest(TestCase):
         operation = Operation(FakeRemote(), '/operations/op')
         operation.update_details(details)
         [container] = operation['resources']['containers']
-        self.assertIsInstance(container, Container)
-        self.assertEqual(container.uri, '/containers/c')
+        assert isinstance(container, Container)
+        assert container.uri == '/containers/c'
         [image] = operation['resources']['images']
-        self.assertIsInstance(image, Image)
-        self.assertEqual(image.uri, '/images/i')
+        assert isinstance(image, Image)
+        assert image.uri == '/images/i'
 
+    @pytest.mark.asyncio
     async def test_wait(self):
         """The wait() method waits for operation completion."""
         status = {'id': 'foo', 'status': 'Completed'}
         remote = FakeRemote(responses=[status])
         operation = Operation(remote, '/operations/op')
         response = await operation.wait()
-        self.assertEqual(response.metadata, status)
-        self.assertEqual(
-            remote.calls,
-            [(('GET', '/operations/op/wait', None, None, None, None))])
+        assert response.metadata == status
+        assert remote.calls == [
+            (('GET', '/operations/op/wait', None, None, None, None))
+        ]
         # the operation status is updated
-        self.assertEqual(operation.details(), status)
+        assert operation.details() == status
 
+    @pytest.mark.asyncio
     async def test_wait_timeout(self):
         """It's possible to pass a timeout for the wait."""
         status = {'id': 'foo', 'status': 'Completed'}
         remote = FakeRemote(responses=[status])
         operation = Operation(remote, '/operations/op')
         await operation.wait(timeout=20)
-        self.assertEqual(
-            remote.calls, [
+        assert remote.calls == [
+            (
                 (
-                    (
-                        'GET', '/operations/op/wait', {
-                            'timeout': 20
-                        }, None, None, None))
-            ])
+                    'GET', '/operations/op/wait', {
+                        'timeout': 20
+                    }, None, None, None))
+        ]
 
 
-class OperationsTests(TestCase):
+class TestOperations:
 
+    @pytest.mark.asyncio
     async def test_read(self):
         """The read method returns opreations in all statuses."""
         remote = FakeRemote(
@@ -69,9 +71,8 @@ class OperationsTests(TestCase):
                 }
             ])
         collection = Operations(remote, '/operations')
-        self.assertEqual(
-            await collection.read(), [
-                Operation(remote, '/operations/one'),
-                Operation(remote, '/operations/two'),
-                Operation(remote, '/operations/three')
-            ])
+        assert await collection.read() == [
+            Operation(remote, '/operations/one'),
+            Operation(remote, '/operations/two'),
+            Operation(remote, '/operations/three')
+        ]

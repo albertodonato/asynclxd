@@ -1,4 +1,4 @@
-from unittest import TestCase
+import pytest
 
 from ..uri import (
     InvalidRemoteURI,
@@ -6,79 +6,70 @@ from ..uri import (
 )
 
 
-class RemoteURITests(TestCase):
+class TestRemoteURI:
 
     def test_uri(self):
         uri = RemoteURI('https://example.com:1234/some/path')
-        self.assertEqual(uri.scheme, 'https')
-        self.assertEqual(uri.host, 'example.com')
-        self.assertEqual(uri.port, 1234)
-        self.assertEqual(uri.path, '/some/path')
+        assert uri.scheme == 'https'
+        assert uri.host == 'example.com'
+        assert uri.port == 1234
+        assert uri.path == '/some/path'
 
     def test_unix_socket_default(self):
         """If a path is not specified for UNIX type, default one is used."""
         uri = RemoteURI('unix://')
-        self.assertEqual(uri.scheme, 'unix')
-        self.assertEqual(uri.host, None)
-        self.assertEqual(uri.path, '/var/lib/lxd/unix.socket')
+        assert uri.scheme == 'unix'
+        assert uri.host is None
+        assert uri.path == '/var/lib/lxd/unix.socket'
 
-    def test_invalid_uri(self):
-        """An invalid URI raises an error."""
-        with self.assertRaises(InvalidRemoteURI) as cm:
-            RemoteURI('https://example.com:not-a-port')
-        self.assertIn("port can't be converted to integer", str(cm.exception))
-
-    def test_invalid_scheme(self):
-        """Host can't be specified for UNIX socket type."""
-        with self.assertRaises(InvalidRemoteURI) as cm:
-            RemoteURI('ftp://example.com')
-        self.assertIn('Unsupported scheme', str(cm.exception))
-
-    def test_uri_unix_socket_host_invalid(self):
-        """Host can't be specified for UNIX socket type."""
-        with self.assertRaises(InvalidRemoteURI) as cm:
-            RemoteURI('unix://hostname/path')
-        self.assertIn(
-            'Hostname not allowed for UNIX sockets', str(cm.exception))
+    @pytest.mark.parametrize(
+        'uri,error_message', [
+            (
+                'https://example.com:not-a-port',
+                "port can't be converted to integer"),
+            ('ftp://example.com', 'Unsupported scheme'),
+            ('unix://hostname/path', 'Hostname not allowed for UNIX sockets')
+        ])
+    def test_malformed_uri(self, uri, error_message):
+        """If URI is malformed an appropriate error is raised."""
+        with pytest.raises(InvalidRemoteURI) as error:
+            RemoteURI(uri)
+        assert error_message in str(error.value)
 
     def test_str(self):
         """A RemoteURI can be printed as string."""
         uri = RemoteURI('https://example.com:8443')
-        self.assertEqual(str(uri), 'https://example.com:8443/')
+        assert str(uri) == 'https://example.com:8443/'
 
     def test_repr(self):
         """A RemoteURI can be repr'd."""
         uri = RemoteURI('https://example.com:8443')
-        self.assertEqual(repr(uri), "'https://example.com:8443/'")
+        assert repr(uri) == "'https://example.com:8443/'"
 
     def test_getattr_invalid_attr(self):
         """Accessing an invalid attribute raises an AttributeError."""
         uri = RemoteURI('https://example.com:8443')
-        self.assertRaises(AttributeError, getattr, uri, 'unknown')
+        with pytest.raises(AttributeError):
+            uri.unknown
 
-    def test_request_path_https(self):
+    @pytest.mark.parametrize(
+        'uri,path,result', [
+            (
+                'https://example.com:8443', '/some/url',
+                'https://example.com:8443/some/url'),
+            ('unix://', '/some/url', 'http://local/some/url'),
+            (
+                'https://example.com:8443', 'some/url',
+                'https://example.com:8443/some/url')
+        ])
+    def test_request_path(self, uri, path, result):
         """Request path is returned for an HTTPS URI."""
-        uri = RemoteURI('https://example.com:8443')
-        self.assertEqual(
-            uri.request_path('/some/url'), 'https://example.com:8443/some/url')
-
-    def test_request_path_unix(self):
-        """Request path is returned for a UNIX URI."""
-        uri = RemoteURI('unix://')
-        self.assertEqual(
-            uri.request_path('/some/url'), 'http://local/some/url')
-
-    def test_request_uri_no_slash(self):
-        """Leading slash is added to the path if not present."""
-        uri = RemoteURI('https://example.com:8443')
-        self.assertEqual(
-            uri.request_path('some/url'), 'https://example.com:8443/some/url')
+        assert RemoteURI(uri).request_path(path) == result
 
     def test_request_uri_with_params(self):
         """If params are provided, they're used in the query string."""
         uri = RemoteURI('https://example.com:8443')
-        self.assertEqual(
-            uri.request_path('some/url', params={
-                'foo': 'bar',
-                'baz': 'x y'
-            }), 'https://example.com:8443/some/url?foo=bar&baz=x+y')
+        params = {'foo': 'bar', 'baz': 'x y'}
+        assert (
+            uri.request_path('some/url', params=params) ==
+            'https://example.com:8443/some/url?foo=bar&baz=x+y')

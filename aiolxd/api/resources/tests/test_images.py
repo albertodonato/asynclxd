@@ -1,4 +1,4 @@
-from asynctest import TestCase
+import pytest
 
 from ...http import Response
 from ...testing import FakeRemote
@@ -10,8 +10,9 @@ from ..images import (
 from ..operations import Operation
 
 
-class ImageAliasTest(TestCase):
+class TestImageAlias:
 
+    @pytest.mark.asyncio
     async def test_related_resources(self):
         """Related resources are returned as instances."""
         remote = FakeRemote()
@@ -20,11 +21,12 @@ class ImageAliasTest(TestCase):
         alias = ImageAlias(remote, '/images/aliases/a')
         alias.update_details({'name': 'a', 'target': 'img'})
         image = alias['target']
-        self.assertIsInstance(image, Image)
-        self.assertEqual(image.uri, '/images/img')
+        assert isinstance(image, Image)
+        assert image.uri == '/images/img'
 
 
-class ImageTest(TestCase):
+@pytest.mark.asyncio
+class TestImage:
 
     async def test_related_resources(self):
         """Related resources are returned as instances."""
@@ -36,20 +38,20 @@ class ImageTest(TestCase):
         image = Image(remote, '/images/i')
         image.update_details(details)
         [alias] = image['aliases']
-        self.assertIsInstance(alias, ImageAlias)
-        self.assertEqual(alias.uri, '/images/aliases/a')
-        self.assertEqual(alias.details(), alias_details)
+        assert isinstance(alias, ImageAlias)
+        assert alias.uri == '/images/aliases/a'
+        assert alias.details() == alias_details
 
     async def test_read_with_secret(self):
         """It's possible to pass a secret to the read operation."""
         remote = FakeRemote(responses=[{'some': 'details'}])
         image = Image(remote, '/images/i')
         await image.read(secret='abc')
-        self.assertEqual(
-            remote.calls,
-            [(('GET', '/images/i', {
+        assert remote.calls == [
+            (('GET', '/images/i', {
                 'secret': 'abc'
-            }, None, None, None))])
+            }, None, None, None))
+        ]
 
     async def test_secret(self):
         """The secret() call returns an operation with a secret."""
@@ -63,12 +65,12 @@ class ImageTest(TestCase):
                 }))
         image = Image(remote, '/images/i')
         operation = await image.secret()
-        self.assertIsInstance(operation, Operation)
-        self.assertEqual(operation.uri, '/operations/op')
-        self.assertEqual(operation.details(), {'some': 'details'})
-        self.assertEqual(
-            remote.calls,
-            [(('POST', '/images/i/secret', None, None, None, None))])
+        assert isinstance(operation, Operation)
+        assert operation.uri == '/operations/op'
+        assert operation.details() == {'some': 'details'}
+        assert remote.calls == [
+            (('POST', '/images/i/secret', None, None, None, None))
+        ]
 
     async def test_refresh(self):
         """The refresh() call returns an operation for updating an image."""
@@ -82,26 +84,27 @@ class ImageTest(TestCase):
                 }))
         image = Image(remote, '/images/i')
         operation = await image.refresh()
-        self.assertIsInstance(operation, Operation)
-        self.assertEqual(operation.uri, '/operations/op')
-        self.assertEqual(operation.details(), {'some': 'details'})
-        self.assertEqual(
-            remote.calls,
-            [(('POST', '/images/i/refresh', None, None, None, None))])
+        assert isinstance(operation, Operation)
+        assert operation.uri == '/operations/op'
+        assert operation.details() == {'some': 'details'}
+        assert remote.calls == [
+            (('POST', '/images/i/refresh', None, None, None, None))
+        ]
 
 
-class ImagesTest(TestCase):
+class TestImages:
 
+    @pytest.mark.asyncio
     async def test_aliases(self):
         """The aliases collection returns image aliases."""
         remote = FakeRemote(
             responses=[['/images/aliases/a/one', '/images/aliases/b']])
         collection = Images(remote, '/images')
         [alias1, alias2] = await collection.aliases.read()
-        self.assertIsInstance(alias1, ImageAlias)
-        self.assertEqual(alias1.uri, '/images/aliases/a/one')
-        self.assertIsInstance(alias2, ImageAlias)
-        self.assertEqual(alias2.uri, '/images/aliases/b')
-        self.assertEqual(
-            remote.calls,
-            [(('GET', '/images/aliases', None, None, None, None))])
+        assert isinstance(alias1, ImageAlias)
+        assert alias1.uri == '/images/aliases/a/one'
+        assert isinstance(alias2, ImageAlias)
+        assert alias2.uri == '/images/aliases/b'
+        assert remote.calls == [
+            (('GET', '/images/aliases', None, None, None, None))
+        ]

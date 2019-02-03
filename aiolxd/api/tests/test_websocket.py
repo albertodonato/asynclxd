@@ -1,4 +1,4 @@
-from asynctest import TestCase
+import pytest
 
 from ..testing import (
     FakeSession,
@@ -24,7 +24,8 @@ class SampleWebsocketHandler(WebsocketHandler):
         self.errors.append(error)
 
 
-class ConnectTests(TestCase):
+@pytest.mark.asyncio
+class TestConnect:
 
     async def test_messages(self):
         """"connect() processses messages."""
@@ -32,7 +33,7 @@ class ConnectTests(TestCase):
         session = FakeSession(websocket=FakeWebSocket(messages=messages))
         handler = SampleWebsocketHandler()
         await connect(session, '/', handler)
-        self.assertEqual(handler.messages, ['"foo"', '"bar"'])
+        assert handler.messages == ['"foo"', '"bar"']
 
     async def test_error(self):
         """"connect() processes errors."""
@@ -40,7 +41,7 @@ class ConnectTests(TestCase):
         session = FakeSession(websocket=FakeWebSocket(messages=messages))
         handler = SampleWebsocketHandler()
         await connect(session, '/', handler)
-        self.assertEqual(handler.errors, ['error'])
+        assert handler.errors == ['error']
 
     async def test_close(self):
         """"connect() processes closes messages."""
@@ -49,6 +50,6 @@ class ConnectTests(TestCase):
         session = FakeSession(websocket=websocket)
         handler = SampleWebsocketHandler()
         await connect(session, '/', handler)
-        self.assertEqual(handler.messages, [])
-        self.assertEqual(handler.errors, [])
-        self.assertTrue(websocket.closed)
+        assert handler.messages == []
+        assert handler.errors == []
+        assert websocket.closed

@@ -2,9 +2,7 @@ from io import StringIO
 from pathlib import Path
 from textwrap import dedent
 
-from asynctest import TestCase
-from fixtures import TestWithFixtures
-from toolrack.testing import TempDirFixture
+import pytest
 
 from ..http import (
     request,
@@ -21,137 +19,139 @@ from ..testing import (
 )
 
 
-class RequestTests(TestCase, TestWithFixtures):
+@pytest.fixture
+def session():
+    yield FakeSession()
 
-    def setUp(self):
-        super().setUp()
-        self.tempdir = self.useFixture(TempDirFixture())
-        self.session = FakeSession()
 
-    async def test_request(self):
+@pytest.fixture
+def upload_file(tmpdir):
+    upload_file = Path(tmpdir / 'upload')
+    upload_file.write_text('data')
+    yield upload_file
+
+
+@pytest.mark.asyncio
+class TestRequest:
+
+    async def test_request(self, session):
         """The request call makes an HTTP request and returns a response."""
-        self.session.responses.append(['/1.0'])
-        resp = await request(self.session, 'GET', '/')
-        self.assertEqual(resp.status, 200)
-        self.assertEqual(await resp.json(), ['/1.0'])
-        self.assertEqual(self.session.calls, [('GET', '/', None, {}, None)])
+        session.responses.append(['/1.0'])
+        resp = await request(session, 'GET', '/')
+        assert resp.status == 200
+        assert await resp.json() == ['/1.0']
+        assert session.calls == [('GET', '/', None, {}, None)]
 
-    async def test_request_with_content(self):
+    async def test_request_with_content(self, session):
         """The request call can include content in the request."""
-        self.session.responses.append('response data')
+        session.responses.append('response data')
         content = {'some': 'content'}
-        await request(self.session, 'POST', '/', content=content)
-        self.assertEqual(
-            self.session.calls, [
-                (
-                    'POST', '/', None, {
-                        'Content-Type': 'application/json'
-                    }, content)
-            ])
+        await request(session, 'POST', '/', content=content)
+        assert session.calls == [
+            ('POST', '/', None, {
+                'Content-Type': 'application/json'
+            }, content)
+        ]
 
-    async def test_request_with_upload_path(self):
+    async def test_request_with_upload_path(self, session, upload_file):
         """The request call can include content from a file."""
-        upload_file = Path(self.tempdir.mkfile(content='data'))
-        self.session.responses.append('response data')
-        await request(self.session, 'POST', '/', upload=upload_file)
-        self.assertEqual(
-            self.session.calls, [
-                (
-                    'POST', '/', None, {
-                        'Content-Type': 'application/octet-stream'
-                    }, 'data')
-            ])
+        session.responses.append('response data')
+        await request(session, 'POST', '/', upload=upload_file)
+        assert session.calls == [
+            (
+                'POST', '/', None, {
+                    'Content-Type': 'application/octet-stream'
+                }, 'data')
+        ]
 
-    async def test_request_with_upload_file_descriptor(self):
+    async def test_request_with_upload_file_descriptor(
+            self, session, upload_file):
         """The request call can include content from a file descriptor."""
-        upload_file = Path(self.tempdir.mkfile(content='data'))
-        self.session.responses.append('response data')
+        session.responses.append('response data')
         upload = upload_file.open()
-        await request(self.session, 'POST', '/', upload=upload)
-        self.assertEqual(
-            self.session.calls, [
-                (
-                    'POST', '/', None, {
-                        'Content-Type': 'application/octet-stream'
-                    }, 'data')
-            ])
+        await request(session, 'POST', '/', upload=upload)
+        assert session.calls == [
+            (
+                'POST', '/', None, {
+                    'Content-Type': 'application/octet-stream'
+                }, 'data')
+        ]
         # the passed file descriptor is closed
-        self.assertTrue(upload.closed)
+        assert upload.closed
 
-    async def test_request_with_params(self):
+    async def test_request_with_params(self, session):
         """The request call can include params in the request."""
-        self.session.responses.append('response data')
+        session.responses.append('response data')
         params = {'a': 'param'}
-        await request(self.session, 'POST', '/', params=params)
-        self.assertEqual(self.session.calls, [('POST', '/', params, {}, None)])
+        await request(session, 'POST', '/', params=params)
+        assert session.calls == [('POST', '/', params, {}, None)]
 
-    async def test_request_with_headers(self):
+    async def test_request_with_headers(self, session):
         """The request call can include extra headers in the request."""
-        self.session.responses.append('response data')
+        session.responses.append('response data')
         headers = {'X-Sample': 'value'}
-        await request(self.session, 'POST', '/', headers=headers)
-        self.assertEqual(
-            self.session.calls,
-            [('POST', '/', None, {
+        await request(session, 'POST', '/', headers=headers)
+        assert session.calls == [
+            ('POST', '/', None, {
                 'X-Sample': 'value'
-            }, None)])
+            }, None)
+        ]
 
-    async def test_request_error(self):
+    async def test_request_error(self, session):
         """The request call raises an error on failed requests."""
-        self.session.responses.append(
+        session.responses.append(
             make_http_response(status=404, reason='Not found'))
-        with self.assertRaises(ResponseError) as cm:
-            await request(self.session, 'GET', '/'),
-        self.assertEqual(cm.exception.code, 404)
-        self.assertEqual(cm.exception.message, 'Not found')
-        self.assertEqual(
-            str(cm.exception), 'API request failed with 404: Not found')
+        with pytest.raises(ResponseError) as error:
+            await request(session, 'GET', '/'),
+        exception = error.value
+        assert exception.code == 404
+        assert exception.message == 'Not found'
+        assert str(exception) == 'API request failed with 404: Not found'
 
-    async def test_request_error_from_payload(self):
+    async def test_request_error_from_payload(self, session):
         """Error details can be obtained from the response payload."""
-        self.session.responses.append(
-            make_error_response('Cancelled', code=401))
-        with self.assertRaises(ResponseError) as cm:
-            await request(self.session, 'GET', '/'),
-        self.assertEqual(cm.exception.code, 401)
-        self.assertEqual(cm.exception.message, 'Cancelled')
-        self.assertEqual(
-            str(cm.exception), 'API request failed with 401: Cancelled')
+        session.responses.append(make_error_response('Cancelled', code=401))
+        with pytest.raises(ResponseError) as error:
+            await request(session, 'GET', '/'),
+        exception = error.value
+        assert exception.code == 401
+        assert exception.message == 'Cancelled'
+        assert str(exception) == 'API request failed with 401: Cancelled'
 
-    async def test_request_error_paylod_code_overrides_http(self):
+    async def test_request_error_paylod_code_overrides_http(self, session):
         """The error code from the payload takes precedence on the HTTP one."""
-        self.session.responses.append(
+        session.responses.append(
             make_error_response('Cancelled', code=401, http_status=400))
-        with self.assertRaises(ResponseError) as cm:
-            await request(self.session, 'GET', '/'),
-        self.assertEqual(cm.exception.code, 401)
+        with pytest.raises(ResponseError) as error:
+            await request(session, 'GET', '/'),
+        assert error.value.code == 401
 
 
-class ResponseTests(TestCase):
+class TestResponse:
 
     def test_instantiate(self):
         """A Response can be instantiated."""
         headers = {'ETag': 'abcde'}
         content = {'type': 'sync', 'metadata': {'some': 'content'}}
         response = Response(FakeRemote(), 200, headers, content)
-        self.assertEqual(response.http_code, 200)
-        self.assertEqual(response.etag, 'abcde')
-        self.assertEqual(response.type, 'sync')
-        self.assertEqual(response.metadata, {'some': 'content'})
+        assert response.http_code == 200
+        assert response.etag == 'abcde'
+        assert response.type == 'sync'
+        assert response.metadata == {'some': 'content'}
 
     def test_instantiate_with_binary_content(self):
         """A Response can be instantiated with binary content."""
         content = StringIO('some content')
         response = Response(FakeRemote(), 200, {}, content)
-        self.assertEqual(response.type, 'raw')
-        self.assertIsNone(response.metadata)
-        self.assertIs(response._content, content)
+        assert response.type == 'raw'
+        assert response.metadata is None
+        assert response._content is content
 
     def test_operation_not_async(self):
         """If the response is sync, the operation is None."""
         content = {'type': 'sync', 'metadata': {'some': 'content'}}
         response = Response(FakeRemote(), 200, {}, content)
-        self.assertIsNone(response.operation)
+        assert response.operation is None
 
     def test_operation_async(self):
         """If the response is async, the operation is defined."""
@@ -161,35 +161,36 @@ class ResponseTests(TestCase):
                 'type': 'async',
                 'metadata': metadata
             })
-        self.assertIsInstance(response.operation, Operation)
-        self.assertEqual(response.operation.uri, '/operations/op')
-        self.assertEqual(response.operation.details(), metadata)
+        assert isinstance(response.operation, Operation)
+        assert response.operation.uri == '/operations/op'
+        assert response.operation.details() == metadata
 
+    @pytest.mark.asyncio
     async def test_write_content(self):
         """Response binary content can be written to file."""
         content = FakeStreamReader(StringIO('some content'))
         response = Response(FakeRemote(), 200, {}, content)
         out_stream = StringIO()
         await response.write_content(out_stream)
-        self.assertEqual(out_stream.getvalue(), 'some content')
+        assert out_stream.getvalue() == 'some content'
 
+    @pytest.mark.asyncio
     async def test_write_content_not_binary(self):
         """If there's no binary payload, trying to write raises an error."""
         response = Response(FakeRemote(), 200, {}, {'some': 'content'})
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as error:
             await response.write_content(StringIO())
-        self.assertEqual(str(cm.exception), 'No binary payload')
+        assert str(error.value) == 'No binary payload'
 
     def test_pprint(self):
         """The pprint method pretty-prints the response."""
         headers = {'ETag': 'abcde', 'Location': '/some/url'}
         content = {'type': 'sync', 'metadata': {'some': 'content'}}
         response = Response(FakeRemote(), 200, headers, content)
-        self.assertEqual(
-            dedent(
-                """\
+        assert response.pprint() == dedent(
+            """\
             {'etag': 'abcde',
              'http-code': 200,
              'location': '/some/url',
              'metadata': {'some': 'content'},
-             'type': 'sync'}"""), response.pprint())
+             'type': 'sync'}""")

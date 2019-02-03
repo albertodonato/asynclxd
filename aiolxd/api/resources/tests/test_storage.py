@@ -1,4 +1,4 @@
-from asynctest import TestCase
+import pytest
 
 from ...testing import FakeRemote
 from ..containers import (
@@ -16,8 +16,9 @@ from ..profiles import (
 from ..storage import StoragePool
 
 
-class StoragePoolTest(TestCase):
+class TestStoragePool:
 
+    @pytest.mark.asyncio
     async def test_related_resources(self):
         """Related resources are returned as instances."""
         remote = FakeRemote()
@@ -31,13 +32,14 @@ class StoragePoolTest(TestCase):
                 'used_by': ['/containers/c', '/images/i', '/profiles/p']
             })
         [container, image, profile] = storage_pool['used_by']
-        self.assertIsInstance(container, Container)
-        self.assertEqual(container.uri, '/containers/c')
-        self.assertIsInstance(image, Image)
-        self.assertEqual(image.uri, '/images/i')
-        self.assertIsInstance(profile, Profile)
-        self.assertEqual(profile.uri, '/profiles/p')
+        assert isinstance(container, Container)
+        assert container.uri == '/containers/c'
+        assert isinstance(image, Image)
+        assert image.uri == '/images/i'
+        assert isinstance(profile, Profile)
+        assert profile.uri == '/profiles/p'
 
+    @pytest.mark.asyncio
     async def test_related_resources_unknown_kind(self):
         """Related resources URI is returned if resource type is not known."""
         remote = FakeRemote()
@@ -48,14 +50,15 @@ class StoragePoolTest(TestCase):
         storage_pool = StoragePool(remote, '/storage-pools/s')
         storage_pool.update_details({'used_by': ['/unknown/foo']})
         [unknown] = storage_pool['used_by']
-        self.assertEqual(unknown, '/unknown/foo')
+        assert unknown == '/unknown/foo'
 
+    @pytest.mark.asyncio
     async def test_resources(self):
         """The resources() call returns details about pool resources."""
         remote = FakeRemote(responses=[{'some': 'details'}])
         storage_pool = StoragePool(remote, '/storage-pools/s')
         resources = await storage_pool.resources()
-        self.assertEqual(resources, {'some': 'details'})
-        self.assertEqual(
-            remote.calls,
-            [(('GET', '/storage-pools/s/resources', None, None, None, None))])
+        assert resources == {'some': 'details'}
+        assert remote.calls == [
+            (('GET', '/storage-pools/s/resources', None, None, None, None))
+        ]

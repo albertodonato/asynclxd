@@ -1,10 +1,7 @@
-from unittest import (
-    mock,
-    TestCase,
-)
+from unittest import mock
 
-from asynctest import TestCase as AsyncTestCase
 import iso8601
+import pytest
 
 from ..events import (
     Event,
@@ -13,7 +10,7 @@ from ..events import (
 )
 
 
-class EventTests(TestCase):
+class TestEvent:
 
     def test_event_create(self):
         """An event is created from a set of details."""
@@ -26,13 +23,14 @@ class EventTests(TestCase):
             }
         }
         event = Event(**details)
-        self.assertEqual(event.type, 'logging')
-        self.assertEqual(event.timestamp, iso8601.parse_date(timestamp))
-        self.assertEqual(event.metadata, {'foo': 'bar'})
+        assert event.type == 'logging'
+        assert event.timestamp == iso8601.parse_date(timestamp)
+        assert event.metadata == {'foo': 'bar'}
 
 
-class EventsTests(AsyncTestCase):
+class TestEvents:
 
+    @pytest.mark.asyncio
     async def test_call(self):
         """Calling the instance creates a websocket with the handler."""
         calls = []
@@ -44,19 +42,18 @@ class EventsTests(AsyncTestCase):
         remote.websocket = websocket
 
         await Events(remote)(None, types=['logging', 'operation'])
-        self.assertEqual(
-            calls, [
-                (
-                    (mock.ANY, 'events'), {
-                        'params': {
-                            'type': 'logging,operation'
-                        }
-                    })
-            ])
+        assert calls == [
+            ((mock.ANY, 'events'), {
+                'params': {
+                    'type': 'logging,operation'
+                }
+            })
+        ]
 
 
-class EventHandlerTests(AsyncTestCase):
+class TestEventHandler:
 
+    @pytest.mark.asyncio
     async def test_handle_message(self):
         """The handler handles messages and returns events."""
         events = []
@@ -73,10 +70,9 @@ class EventHandlerTests(AsyncTestCase):
             }
         }
         await handler.handle_message(message)
-        self.assertEqual(
-            events, [
-                Event(
-                    type='operation',
-                    timestamp='2015-06-09T19:07:24.379615253-06:00',
-                    metadata={'some': 'data'})
-            ])
+        assert events == [
+            Event(
+                type='operation',
+                timestamp='2015-06-09T19:07:24.379615253-06:00',
+                metadata={'some': 'data'})
+        ]

@@ -10,7 +10,7 @@ from aiolxd import (
     __version__,
 )
 
-tests_require = ['asynctest']
+tests_require = ['pytest', 'pytest-asyncio', 'pytest-mock']
 
 config = {
     'name': 'aiolxd',
