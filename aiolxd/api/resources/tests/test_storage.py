@@ -28,9 +28,7 @@ class TestStoragePool:
         remote.profiles = Profiles(remote, '/profiles')
         storage_pool = StoragePool(remote, '/storage-pools/s')
         storage_pool.update_details(
-            {
-                'used_by': ['/containers/c', '/images/i', '/profiles/p']
-            })
+            {'used_by': ['/containers/c', '/images/i', '/profiles/p']})
         [container, image, profile] = storage_pool['used_by']
         assert isinstance(container, Container)
         assert container.uri == '/containers/c'

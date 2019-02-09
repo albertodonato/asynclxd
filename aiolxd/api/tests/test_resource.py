@@ -357,9 +357,7 @@ class TestResource:
 
         with pytest.raises(ValueError):
             SampleResourceWithNullIDAttribute.id_from_details(
-                {
-                    'some': 'details'
-                })
+                {'some': 'details'})
 
     def test_uri(self):
         """The _uri() method returns a URI below the resource."""
