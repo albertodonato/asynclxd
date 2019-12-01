@@ -1,3 +1,9 @@
 """aioLXD - asynchronous client library for LXD REST API."""
 
-__version__ = '0.0.1'
+from distutils.version import LooseVersion
+
+import pkg_resources
+
+__all__ = ["__version__"]
+
+__version__ = LooseVersion(pkg_resources.require("aiolxd")[0].version)

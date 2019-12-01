@@ -18,13 +18,11 @@ def _related_used_by(remote, entry):
 class StoragePool(NamedResource):
     """API resources for storage pools"""
 
-    related_resources = frozenset([
-        (('used_by', ), _related_used_by),
-    ])
+    related_resources = frozenset([(("used_by",), _related_used_by)])
 
     async def resources(self):
         """Return resources for the storage pool."""
-        response = await self._remote.request('GET', self._uri('resources'))
+        response = await self._remote.request("GET", self._uri("resources"))
         return response.metadata
 
 

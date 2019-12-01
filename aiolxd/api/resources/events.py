@@ -27,9 +27,10 @@ class Events:
         self._remote = remote
 
     def __call__(self, handle_event, types=None):
-        params = {'type': ','.join(types)} if types else None
+        params = {"type": ",".join(types)} if types else None
         return self._remote.websocket(
-            EventHandler(handle_event), 'events', params=params)
+            EventHandler(handle_event), "events", params=params
+        )
 
 
 class EventHandler(WebsocketHandler):

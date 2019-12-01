@@ -34,20 +34,15 @@ class AsyncIterator:
 class FakeRemote:
     """A fake Remote class."""
 
-    version = '1.0'
+    version = "1.0"
 
     def __init__(self, responses=None):
         self.responses = responses or []
         self.calls = []
 
     async def request(
-            self,
-            method,
-            path,
-            params=None,
-            headers=None,
-            content=None,
-            upload=None):
+        self, method, path, params=None, headers=None, content=None, upload=None
+    ):
         self.calls.append((method, path, params, headers, content, upload))
         response = self.responses.pop(0)
         if isinstance(response, Response):
@@ -65,8 +60,8 @@ class FakeSession:
         self.calls = []
 
     async def request(
-            self, method, path, params=None, headers=None, json=None,
-            data=None):
+        self, method, path, params=None, headers=None, json=None, data=None
+    ):
         content = json
         if data:
             content = data.read()
@@ -74,8 +69,7 @@ class FakeSession:
         response_content = self.responses.pop(0)
         if isinstance(response_content, ClientResponse):
             return response_content
-        return make_http_response(
-            method=method, url=path, content=response_content)
+        return make_http_response(method=method, url=path, content=response_content)
 
     def ws_connect(self, path):
         return self.websocket
@@ -108,7 +102,7 @@ class FakeWebSocket:
 class FakeWSMessage:
     """A Fake websocket message."""
 
-    def __init__(self, data, type='TEXT'):
+    def __init__(self, data, type="TEXT"):
         self.type = getattr(WSMsgType, type)
         self.data = data
 
@@ -158,8 +152,8 @@ class FakeStreamIterator:
 
 
 def make_http_response(
-        status=200, reason='OK', method='GET', url='/', headers=None,
-        content=None):
+    status=200, reason="OK", method="GET", url="/", headers=None, content=None
+):
     """Return a minimal ClientResponse with fields used in tests."""
     url = URL(url)
     headers = CIMultiDict(headers or {})
@@ -173,7 +167,8 @@ def make_http_response(
         request_info=request_info,
         traces=(),
         loop=get_event_loop(),
-        session=None)
+        session=None,
+    )
     response.status = status
     response.reason = reason
     response._headers = headers
@@ -181,36 +176,31 @@ def make_http_response(
         response.content = FakeStreamReader(content)
     elif content is not None:
         response.content = FakeStreamReader(
-            io.BytesIO(json_dumps(content).encode('utf8')))
-        response.headers['Content-Type'] = 'application/json'
+            io.BytesIO(json_dumps(content).encode("utf8"))
+        )
+        response.headers["Content-Type"] = "application/json"
     return response
 
 
 def make_error_response(error, code=400, http_status=None):
     """Return an API error with the specified message and code."""
-    content = {
-        'type': 'error',
-        'error': error,
-        'error_code': code,
-        'metadata': {}
-    }
+    content = {"type": "error", "error": error, "error_code": code, "metadata": {}}
     if http_status is None:
         http_status = code
-    return make_http_response(
-        status=http_status, reason='Failure', content=content)
+    return make_http_response(status=http_status, reason="Failure", content=content)
 
 
 def make_response_content(metadata=None):
     """Return content for an API successful response."""
     return {
-        'type': 'sync',
-        'status': 'Success',
-        'status_code': 200,
-        'metadata': metadata or {}
+        "type": "sync",
+        "status": "Success",
+        "status_code": 200,
+        "metadata": metadata or {},
     }
 
 
-def make_resource(resource_class, uri='/resource', etag=None, details=None):
+def make_resource(resource_class, uri="/resource", etag=None, details=None):
     """Return a resource instance with specified details."""
     resource = resource_class(FakeRemote(), uri)
     resource._last_etag = etag

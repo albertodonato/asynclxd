@@ -45,19 +45,19 @@ class Response:
     def __init__(self, remote, http_code, headers, content):
         self._remote = remote
         self.http_code = http_code
-        self.etag = headers.get('ETag')
-        self.location = headers.get('Location')
+        self.etag = headers.get("ETag")
+        self.location = headers.get("Location")
         if isinstance(content, ContentStream):
             self._content = content
-            self.type = 'raw'
+            self.type = "raw"
         else:
-            self.type = content.get('type')
-            self.metadata = content.get('metadata', {})
+            self.type = content.get("type")
+            self.metadata = content.get("metadata", {})
 
     @property
     def operation(self):
         """Return the background operation from this response, if async."""
-        if self.type != 'async':
+        if self.type != "async":
             return None
 
         operation = Operation(self._remote, self.location)
@@ -71,7 +71,7 @@ class Response:
 
         """
         if not self._content:
-            raise ValueError('No binary payload')
+            raise ValueError("No binary payload")
 
         async for data in self._content.iter_any():
             stream.write(data)
@@ -83,11 +83,11 @@ class Response:
 
         """
         data = {
-            'http-code': self.http_code,
-            'etag': self.etag,
-            'location': self.location,
-            'type': self.type,
-            'metadata': self.metadata
+            "http-code": self.http_code,
+            "etag": self.etag,
+            "location": self.location,
+            "type": self.type,
+            "metadata": self.metadata,
         }
         return pformat(data)
 
@@ -103,18 +103,12 @@ class ResponseError(Exception):
     def __init__(self, code, message):
         self.code = code
         self.message = message
-        super().__init__(
-            f'API request failed with {self.code}: {self.message}')
+        super().__init__(f"API request failed with {self.code}: {self.message}")
 
 
 async def request(
-        session,
-        method,
-        path,
-        params=None,
-        headers=None,
-        content=None,
-        upload=None):
+    session, method, path, params=None, headers=None, content=None, upload=None
+):
     """Perform an API request with a session.
 
     The Content-Type of the request is set based on whether :data:`content` or
@@ -133,18 +127,14 @@ async def request(
     if not headers:
         headers = {}
     if content:
-        headers['Content-Type'] = 'application/json'
+        headers["Content-Type"] = "application/json"
     if upload:
-        headers['Content-Type'] = 'application/octet-stream'
+        headers["Content-Type"] = "application/octet-stream"
         if isinstance(upload, UploadFilePath):
             upload = Path(upload).open()
     response = await session.request(
-        method,
-        path,
-        params=params,
-        headers=headers,
-        json=content,
-        data=upload)
+        method, path, params=params, headers=headers, json=content, data=upload
+    )
     if upload:
         upload.close()
 
@@ -154,9 +144,9 @@ async def request(
     except ClientResponseError as error:
         error_code = error.status
         error_mesg = error.message
-        if error.headers.get('Content-Type') == 'application/json':
+        if error.headers.get("Content-Type") == "application/json":
             content = await response.json()
-            error_code = content['error_code']
+            error_code = content["error_code"]
             error_mesg = content["error"]
         raise ResponseError(error_code, error_mesg)
 

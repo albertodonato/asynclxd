@@ -13,19 +13,19 @@ from .images import Image
 class Operation(Resource):
     """API resouce for operations."""
 
-    id_attribute = 'id'
+    id_attribute = "id"
 
     related_resources = frozenset(
         [
-            (('resources', 'containers'), Container),
-            (('resources', 'images'), Image)
+            (("resources", "containers"), Container),
+            (("resources", "images"), Image)
             # XXX add "cluster" once cluster resources are supported
-        ])
+        ]
+    )
 
     async def wait(self, timeout=None):
-        params = {'timeout': timeout} if timeout else None
-        response = await self._remote.request(
-            'GET', self._uri('wait'), params=params)
+        params = {"timeout": timeout} if timeout else None
+        response = await self._remote.request("GET", self._uri("wait"), params=params)
         self._process_response(response)
         return response
 

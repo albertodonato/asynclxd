@@ -89,13 +89,13 @@ class Remote(Loggable):
     #: Collection property for accessing profiles.
     profiles = Collection(resources.Profiles)
     #: Collection property for accessing storage pools.
-    storage_pools = Collection(resources.StoragePools, name='storage-pools')
+    storage_pools = Collection(resources.StoragePools, name="storage-pools")
 
     _session_factory = ClientSession  # for testing
     _session = None
     _loop = None
 
-    def __init__(self, uri, certs=None, version='1.0', loop=None):
+    def __init__(self, uri, certs=None, version="1.0", loop=None):
         self.uri = RemoteURI(uri)
         self.certs = certs
         self.version = version
@@ -103,7 +103,7 @@ class Remote(Loggable):
         self._remote = self  # for the Collection wrapper
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({repr(self.uri)})'
+        return f"{self.__class__.__name__}({repr(self.uri)})"
 
     async def __aenter__(self):
         self.open()
@@ -115,35 +115,35 @@ class Remote(Loggable):
     @property
     def resource_uri(self):
         """Return the URI for the base resource of the Remote."""
-        return f'/{self.version}'
+        return f"/{self.version}"
 
     def open(self):
         """Start a session with the remote."""
         if self._session:
-            raise SessionError('Already in a session')
+            raise SessionError("Already in a session")
         self._session = self._session_factory(connector=self._connector())
 
     async def close(self):
         """Terminate the session with the remote."""
         if not self._session:
-            raise SessionError('Not in a session')
+            raise SessionError("Not in a session")
         await self._session.close()
         self._session = None
 
     async def api_versions(self):
         """Return a list of available API versions."""
         # use absolute URI so that the version is not included
-        response = await self.request('GET', '/')
-        return [version.lstrip('/') for version in response.metadata]
+        response = await self.request("GET", "/")
+        return [version.lstrip("/") for version in response.metadata]
 
     async def info(self):
         """Return a dict with information about server configuration."""
-        response = await self.request('GET', '')
+        response = await self.request("GET", "")
         return response.metadata
 
     async def resources(self):
         """Return a dict with information about server resources."""
-        response = await self.request('GET', 'resources')
+        response = await self.request("GET", "resources")
         return response.metadata
 
     async def config(self, options=None, replace=False):
@@ -156,13 +156,12 @@ class Remote(Loggable):
 
         """
         if options is None:
-            response = await self.request('GET', '')
+            response = await self.request("GET", "")
         else:
-            method = 'PUT' if replace else 'PATCH'
-            response = await self.request(
-                method, '', content={'config': options})
+            method = "PUT" if replace else "PATCH"
+            response = await self.request(method, "", content={"config": options})
 
-        return response.metadata.get('config', {})
+        return response.metadata.get("config", {})
 
     @property
     def events(self):
@@ -170,13 +169,8 @@ class Remote(Loggable):
         return resources.Events(self)
 
     async def request(
-            self,
-            method,
-            path,
-            params=None,
-            headers=None,
-            content=None,
-            upload=None):
+        self, method, path, params=None, headers=None, content=None, upload=None
+    ):
         """Perform an API request within the session.
 
         :param str method: the HTTP method.
@@ -191,10 +185,9 @@ class Remote(Loggable):
 
         """
         if not self._session:
-            raise SessionError('Not in a session')
+            raise SessionError("Not in a session")
 
-        self.logger.debug(
-            f'{method} {self._full_path(path, params=params)} {content}')
+        self.logger.debug(f"{method} {self._full_path(path, params=params)} {content}")
         path = self._full_path(path)
         response = await http.request(
             self._session,
@@ -203,7 +196,8 @@ class Remote(Loggable):
             params=params,
             headers=headers,
             content=content,
-            upload=upload)
+            upload=upload,
+        )
         return await self._make_response(response)
 
     def websocket(self, handler, path, params=None):
@@ -217,24 +211,23 @@ class Remote(Loggable):
 
         """
         if not self._session:
-            raise SessionError('Not in a session')
+            raise SessionError("Not in a session")
 
         path = self._full_path(path, params=params)
-        self.logger.debug(f'{handler.__class__.__name__} {path}')
-        return self._loop.create_task(
-            websocket.connect(self._session, path, handler))
+        self.logger.debug(f"{handler.__class__.__name__} {path}")
+        return self._loop.create_task(websocket.connect(self._session, path, handler))
 
     def _full_path(self, path, params=None):
         """Return the full path for a request."""
         if not path:
-            path = '/' + self.version
-        elif not path.startswith('/'):
-            path = f'/{self.version}/{path}'
+            path = "/" + self.version
+        elif not path.startswith("/"):
+            path = f"/{self.version}/{path}"
         return self.uri.request_path(path, params=params)
 
     async def _make_response(self, http_response):
         headers = http_response.headers
-        if headers.get('Content-Type') == 'application/json':
+        if headers.get("Content-Type") == "application/json":
             content = await http_response.json()
         else:
             content = http_response.content
@@ -242,14 +235,14 @@ class Remote(Loggable):
 
     def _connector(self):
         """Return a connector for the HTTP session."""
-        if self.uri.scheme == 'unix':
+        if self.uri.scheme == "unix":
             return UnixConnector(path=self.uri.path)
 
         ssl_context = None
         if self.certs:  # pragma: no cover
-            ssl_context = ssl.create_default_context(
-                purpose=ssl.Purpose.CLIENT_AUTH)
+            ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
             ssl_context.load_verify_locations(cafile=self.certs.server_cert)
             ssl_context.load_cert_chain(
-                self.certs.client_cert, keyfile=self.certs.client_key)
+                self.certs.client_cert, keyfile=self.certs.client_key
+            )
         return TCPConnector(ssl=ssl_context)

@@ -9,7 +9,7 @@ from ..resource import (
 class Certificate(Resource):
     """API resouce for certificates."""
 
-    id_attribute = 'fingerprint'
+    id_attribute = "fingerprint"
 
 
 class Certificates(ResourceCollection):

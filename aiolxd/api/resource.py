@@ -18,7 +18,7 @@ class Collection:
 
     """
 
-    def __init__(self, resource_collection, name=''):
+    def __init__(self, resource_collection, name=""):
         self.resource_collection = resource_collection
         self.name = name
 
@@ -28,17 +28,17 @@ class Collection:
             self.name = name
 
     def __get__(self, instance, owner):
-        base_uri = getattr(instance, 'resource_uri', None)
+        base_uri = getattr(instance, "resource_uri", None)
         if not base_uri:
             base_uri = instance.uri
-        uri = f'{base_uri}/{self.name}'
+        uri = f"{base_uri}/{self.name}"
         return self.resource_collection(instance._remote, uri)
 
 
 class ResourceCollection(metaclass=abc.ABCMeta):
     """A collection for API resources of a type."""
 
-    resource_class = abc.abstractproperty(doc='Class for returned resources')
+    resource_class = abc.abstractproperty(doc="Class for returned resources")
 
     def __init__(self, remote, uri, raw=False):
         self._remote = remote
@@ -46,7 +46,7 @@ class ResourceCollection(metaclass=abc.ABCMeta):
         self._raw = raw
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({repr(self.uri)})'
+        return f"{self.__class__.__name__}({repr(self.uri)})"
 
     def raw(self):
         """Return a copy of this collection which returns raw responses."""
@@ -54,8 +54,7 @@ class ResourceCollection(metaclass=abc.ABCMeta):
 
     async def create(self, details):
         """Create a new resource in the collection."""
-        response = await self._remote.request(
-            'POST', self.uri, content=details)
+        response = await self._remote.request("POST", self.uri, content=details)
         if self._raw:
             return response.metadata
         if response.operation:
@@ -84,8 +83,8 @@ class ResourceCollection(metaclass=abc.ABCMeta):
         request.
 
         """
-        params = {'recursion': 1} if recursion else None
-        response = await self._remote.request('GET', self.uri, params=params)
+        params = {"recursion": 1} if recursion else None
+        response = await self._remote.request("GET", self.uri, params=params)
         content = response.metadata
         if self._raw:
             return content
@@ -98,8 +97,7 @@ class ResourceCollection(metaclass=abc.ABCMeta):
     def resource_from_details(self, details):
         """Return an instance of a resource for the collection from details."""
         resource_id = self.resource_class.id_from_details(details)
-        resource = self.resource_class(
-            self._remote, self._resource_uri(resource_id))
+        resource = self.resource_class(self._remote, self._resource_uri(resource_id))
         resource.update_details(details)
         return resource
 
@@ -117,8 +115,8 @@ class ResourceCollection(metaclass=abc.ABCMeta):
     def _resource_uri(self, resource_id):
         if resource_id.startswith(self.uri):
             # strip prefix
-            resource_id = resource_id[len(self.uri) + 1:]
-        return f'{self.uri}/{quote(resource_id)}'
+            resource_id = resource_id[len(self.uri) + 1 :]
+        return f"{self.uri}/{quote(resource_id)}"
 
 
 class Resource(metaclass=abc.ABCMeta):
@@ -126,7 +124,8 @@ class Resource(metaclass=abc.ABCMeta):
 
     #: Name of the attribute that uniquely identifies this resource
     id_attribute = abc.abstractproperty(
-        doc='Attribute that uniquely identifies the resource')
+        doc="Attribute that uniquely identifies the resource"
+    )
 
     #: If defined, a sequence of 2-tuples with a tuple of strings identifying a
     # key in resource details and a resource factory. The factory can be a
@@ -143,7 +142,7 @@ class Resource(metaclass=abc.ABCMeta):
         self.uri = uri
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({repr(self.uri)})'
+        return f"{self.__class__.__name__}({repr(self.uri)})"
 
     def __eq__(self, other):
         return (self._remote, self.uri) == (other._remote, other.uri)
@@ -162,7 +161,7 @@ class Resource(metaclass=abc.ABCMeta):
     @property
     def id(self):
         """Return the unique identifier for a resource."""
-        value = self.uri.split('/')[-1]
+        value = self.uri.split("/")[-1]
         if value:
             return unquote(value)
 
@@ -170,7 +169,7 @@ class Resource(metaclass=abc.ABCMeta):
     def id_from_details(cls, details):
         """Return the ID for a resource from details."""
         if not cls.id_attribute:
-            raise ValueError('Resource has no ID attribute')
+            raise ValueError("Resource has no ID attribute")
         return details[cls.id_attribute]
 
     def update_details(self, details):
@@ -205,7 +204,8 @@ class Resource(metaclass=abc.ABCMeta):
         """
         headers = self._get_headers(etag=etag)
         return await self._remote.request(
-            'PATCH', self.uri, headers=headers, content=details)
+            "PATCH", self.uri, headers=headers, content=details
+        )
 
     async def replace(self, details, etag=True):
         """Replace resource details.
@@ -216,11 +216,12 @@ class Resource(metaclass=abc.ABCMeta):
         """
         headers = self._get_headers(etag=etag)
         return await self._remote.request(
-            'PUT', self.uri, headers=headers, content=details)
+            "PUT", self.uri, headers=headers, content=details
+        )
 
     async def delete(self):
         """Delete this resource."""
-        return await self._remote.request('DELETE', self.uri)
+        return await self._remote.request("DELETE", self.uri)
 
     async def _read(self, params=None):
         """Return details for the resource.
@@ -229,19 +230,19 @@ class Resource(metaclass=abc.ABCMeta):
             the request.
 
         """
-        response = await self._remote.request('GET', self.uri, params=params)
+        response = await self._remote.request("GET", self.uri, params=params)
         self._process_response(response)
         return response
 
     def _uri(self, path):
         """Return a URI below the resource URI."""
-        return f'{self.uri}/{path}'
+        return f"{self.uri}/{path}"
 
     def _get_headers(self, etag=False):
         """Return headers for a request."""
         headers = {}
         if etag and self._last_etag:
-            headers['If-Match'] = self._last_etag
+            headers["If-Match"] = self._last_etag
         return headers or None
 
     def _process_response(self, response):
@@ -280,7 +281,7 @@ class NamedResource(Resource):
 
     """
 
-    id_attribute = 'name'
+    id_attribute = "name"
 
     async def rename(self, name):
         """Rename an resource with the specified name.
@@ -288,8 +289,7 @@ class NamedResource(Resource):
         This updates the URI of this resource to the new one.
 
         """
-        response = await self._remote.request(
-            'POST', self.uri, content={'name': name})
+        response = await self._remote.request("POST", self.uri, content={"name": name})
         self._process_response(response)
         # URI has changed
         self.uri = response.location

@@ -16,9 +16,7 @@ def _related_image(remote, fingerprint):
 class ImageAlias(NamedResource):
     """API resource for image aliases."""
 
-    related_resources = frozenset([
-        (('target', ), _related_image),
-    ])
+    related_resources = frozenset([(("target",), _related_image)])
 
 
 class ImageAliases(ResourceCollection):
@@ -35,11 +33,9 @@ def _related_alias(remote, details):
 class Image(Resource):
     """API resouce for images."""
 
-    id_attribute = 'fingerprint'
+    id_attribute = "fingerprint"
 
-    related_resources = frozenset([
-        (('aliases', ), _related_alias),
-    ])
+    related_resources = frozenset([(("aliases",), _related_alias)])
 
     async def read(self, secret=None):
         """Return image details.
@@ -48,17 +44,17 @@ class Image(Resource):
             trusted.
 
         """
-        params = {'secret': secret} if secret else None
+        params = {"secret": secret} if secret else None
         return await self._read(params=params)
 
     async def secret(self):
         """Create a secret for this image."""
-        response = await self._remote.request('POST', self._uri('secret'))
+        response = await self._remote.request("POST", self._uri("secret"))
         return response.operation
 
     async def refresh(self):
         """Refresh a image."""
-        response = await self._remote.request('POST', self._uri('refresh'))
+        response = await self._remote.request("POST", self._uri("refresh"))
         return response.operation
 
 

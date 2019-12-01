@@ -7,7 +7,7 @@ from .resource import (
 )
 
 __all__ = [
-    'Collection',
-    'Resource',
-    'ResourceCollection',
+    "Collection",
+    "Resource",
+    "ResourceCollection",
 ]
