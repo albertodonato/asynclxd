@@ -1,7 +1,7 @@
 =============
-aiolxd.remote
+asynclxd.remote
 =============
 
-.. automodule:: aiolxd.remote
+.. automodule:: asynclxd.remote
    :members:
    :undoc-members:

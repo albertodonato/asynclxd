@@ -1,4 +1,4 @@
-.. aioLXD documentation master file.
+.. asyncLXD documentation master file.
 
 .. _home:
 

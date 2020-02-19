@@ -1,7 +1,7 @@
 ===============
-aiolxd.api.http
+asynclxd.api.http
 ===============
 
-.. automodule:: aiolxd.api.http
+.. automodule:: asynclxd.api.http
    :members:
    :undoc-members:

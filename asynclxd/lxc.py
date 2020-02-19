@@ -14,7 +14,7 @@ from .remote import (
 def get_remotes(config_dir=None):
     """Return :class:`Remote` instances from the :data:`lxc` config.
 
-    Return a dict mapping remote names to :class:`aiolxd.remote.Remote`
+    Return a dict mapping remote names to :class:`asynclxd.remote.Remote`
     instances.
 
     Only remotes of :data:`"lxd"` protocol are included.

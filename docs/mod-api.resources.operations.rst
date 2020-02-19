@@ -1,7 +1,7 @@
 ===============================
-aiolxd.api.resources.operations
+asynclxd.api.resources.operations
 ===============================
 
-.. automodule:: aiolxd.api.resources.operations
+.. automodule:: asynclxd.api.resources.operations
    :members:
    :undoc-members:

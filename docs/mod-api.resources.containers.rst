@@ -1,7 +1,7 @@
 ===============================
-aiolxd.api.resources.containers
+asynclxd.api.resources.containers
 ===============================
 
-.. automodule:: aiolxd.api.resources.containers
+.. automodule:: asynclxd.api.resources.containers
    :members:
    :undoc-members:

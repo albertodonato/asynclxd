@@ -1,15 +1,15 @@
-====================================================
-aioLXD - Asynchronous client library for the LXD API
-====================================================
+======================================================
+asyncLXD - Asynchronous client library for the LXD API
+======================================================
 
-|Latest Version| |Build Status| |Coverage Status| |Documentation Status|
+|Latest Version| |Build Status| |Coverage Status|
 
-aioLXD is an asyncio-based client library for the the LXD_ REST API.
+asyncLXD is an asyncio-based client library for the the LXD_ REST API.
 
 It provides an high level API to interact with resources on LXD servers, such
 as containers, images, networks, profiles and storage.
 
-LXD servers are accessible through the `aiolxd.remote.Remote` class, which
+LXD servers are accessible through the `asynclxd.remote.Remote` class, which
 exposes server details and configuration, as well as access to resource
 collections.
 
@@ -22,7 +22,7 @@ For example:
 
     from pprint import pprint
 
-    from aiolxd import lxc
+    from asynclxd import lxc
 
     # get all remotes defined in the client config
     remotes = lxc.get_remotes()
@@ -49,11 +49,11 @@ For example:
 
 .. _LXD: https://linuxcontainers.org/lxd/
 
-.. |Latest Version| image:: https://img.shields.io/pypi/v/aiolxd.svg
-   :target: https://pypi.python.org/pypi/aiolxd
-.. |Build Status| image:: https://img.shields.io/travis/albertodonato/aiolxd.svg
-   :target: https://travis-ci.org/albertodonato/aiolxd
-.. |Coverage Status| image:: https://img.shields.io/codecov/c/github/albertodonato/aiolxd/master.svg
-   :target: https://codecov.io/gh/albertodonato/aiolxd
-.. |Documentation Status| image:: https://readthedocs.org/projects/aiolxd/badge/?version=stable
-   :target: https://aiolxd.readthedocs.io/en/stable/?badge=stable
+.. |Latest Version| image:: https://img.shields.io/pypi/v/asynclxd.svg
+   :target: https://pypi.python.org/pypi/asynclxd
+.. |Build Status| image:: https://img.shields.io/travis/albertodonato/asynclxd.svg
+   :target: https://travis-ci.org/albertodonato/asynclxd
+.. |Coverage Status| image:: https://img.shields.io/codecov/c/github/albertodonato/asynclxd/master.svg
+   :target: https://codecov.io/gh/albertodonato/asynclxd
+.. |Documentation Status| image:: https://readthedocs.org/projects/asynclxd/badge/?version=stable
+   :target: https://asynclxd.readthedocs.io/en/stable/?badge=stable

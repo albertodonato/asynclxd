@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# aioLXD documentation build configuration file.
+# asyncLXD documentation build configuration file.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -14,7 +14,7 @@ from datetime import datetime
 # can find the code.
 sys.path.insert(0, os.path.abspath('..'))
 # Import the base module.
-import aiolxd
+import asynclxd
 
 # -- General configuration ------------------------------------------------
 
@@ -37,7 +37,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'aioLXD'
+project = 'asyncLXD'
 copyright = '{}, Alberto Donato'.format(datetime.today().year)
 
 # The version info for the project you're documenting, acts as replacement for
@@ -45,7 +45,7 @@ copyright = '{}, Alberto Donato'.format(datetime.today().year)
 # built documents.
 #
 # The short X.Y version.
-release = aiolxd.__version__
+release = asynclxd.__version__
 # The full version, including alpha/beta/rc tags.
 version = release
 
@@ -75,7 +75,7 @@ html_static_path = ['_static']
 # html_use_opensearch = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'aiolxddoc'
+htmlhelp_basename = 'asynclxddoc'
 
 
 # -- Options for manual page output ---------------------------------------
@@ -83,7 +83,7 @@ htmlhelp_basename = 'aiolxddoc'
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'aiolxd', 'aioLXD Documentation',
+    ('index', 'asynclxd', 'asyncLXD Documentation',
      ['Alberto Donato'], 1)
 ]
 

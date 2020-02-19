@@ -1,7 +1,7 @@
 =============================
-aiolxd.api.resources.profiles
+asynclxd.api.resources.profiles
 =============================
 
-.. automodule:: aiolxd.api.resources.profiles
+.. automodule:: asynclxd.api.resources.profiles
    :members:
    :undoc-members:

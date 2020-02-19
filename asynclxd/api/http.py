@@ -30,7 +30,7 @@ UploadFilePath.register(Path)
 class Response:
     """An response to an API request.
 
-    :param aiolxd.remote.Remote remote: the remote that returned the response.
+    :param asynclxd.remote.Remote remote: the remote that returned the response.
     :param int http_code: the HTTP response code.
     :param dict headers: headers from the HTTP response.
     :param content: the JSON-decoded response content or a stream with the

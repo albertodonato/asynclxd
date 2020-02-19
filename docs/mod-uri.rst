@@ -1,7 +1,7 @@
 ==========
-aiolxd.uri
+asynclxd.uri
 ==========
 
-.. automodule:: aiolxd.uri
+.. automodule:: asynclxd.uri
    :members:
    :undoc-members:

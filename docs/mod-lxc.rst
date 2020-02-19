@@ -1,7 +1,7 @@
 ==========
-aiolxd.lxc
+asynclxd.lxc
 ==========
 
-.. automodule:: aiolxd.lxc
+.. automodule:: asynclxd.lxc
    :members:
    :undoc-members:

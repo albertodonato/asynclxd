@@ -19,7 +19,7 @@ def config_dir(tmpdir):
 
 @pytest.fixture
 def mock_config_dir(mocker, config_dir):
-    mock = mocker.patch("aiolxd.lxc.cli_config_dir")
+    mock = mocker.patch("asynclxd.lxc.cli_config_dir")
     mock.return_value = config_dir
     yield mock
 

@@ -1,7 +1,7 @@
 =================================
-aiolxd.api.resources.certificates
+asynclxd.api.resources.certificates
 =================================
 
-.. automodule:: aiolxd.api.resources.certificates
+.. automodule:: asynclxd.api.resources.certificates
    :members:
    :undoc-members:
