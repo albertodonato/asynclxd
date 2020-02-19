@@ -1,5 +1,4 @@
-vX.Y.Z - YYYY-MM-DD
+v0.0.1 - 2020-02-19
 ===================
 
--
- 
+- Initial release
