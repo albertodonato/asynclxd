@@ -52,7 +52,7 @@ For example:
 .. |Latest Version| image:: https://img.shields.io/pypi/v/asynclxd.svg
    :target: https://pypi.python.org/pypi/asynclxd
 .. |Build Status| image:: https://img.shields.io/travis/albertodonato/asynclxd.svg
-   :target: https://travis-ci.org/albertodonato/asynclxd
+   :target: https://travis-ci.com/albertodonato/asynclxd
 .. |Coverage Status| image:: https://img.shields.io/codecov/c/github/albertodonato/asynclxd/master.svg
    :target: https://codecov.io/gh/albertodonato/asynclxd
 .. |Documentation Status| image:: https://readthedocs.org/projects/asynclxd/badge/?version=stable
