@@ -1,7 +1,6 @@
 from unittest import mock
 
 import iso8601
-
 import pytest
 
 from ..events import (

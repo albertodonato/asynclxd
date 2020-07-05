@@ -5,7 +5,6 @@ from aiohttp import (
     TCPConnector,
     UnixConnector,
 )
-
 import pytest
 
 from ..api.resources import Events
