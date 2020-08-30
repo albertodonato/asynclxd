@@ -201,7 +201,7 @@ class Remote(Loggable):
         return await self._make_response(response)
 
     def websocket(self, handler, path, params=None):
-        """ Connect a handler to a websocket URL.
+        """Connect a handler to a websocket URL.
 
         :param .api.WebsocketHandler handler: handler for the websocket.
         :param str path: the request path. If the path doesn't begin with a
