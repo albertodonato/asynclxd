@@ -2,7 +2,7 @@
 asyncLXD - Asynchronous client library for the LXD API
 ======================================================
 
-|Latest Version| |Build Status| |Coverage Status|
+|Latest Version| |Build Status| |Coverage|
 
 asyncLXD is an asyncio-based client library for the the LXD_ REST API.
 
@@ -50,10 +50,14 @@ For example:
 .. _LXD: https://linuxcontainers.org/lxd/
 
 .. |Latest Version| image:: https://img.shields.io/pypi/v/asynclxd.svg
+   :alt: Latest Version
    :target: https://pypi.python.org/pypi/asynclxd
-.. |Build Status| image:: https://img.shields.io/travis/albertodonato/asynclxd.svg
-   :target: https://travis-ci.com/albertodonato/asynclxd
+.. |Build Status| image:: https://github.com/albertodonato/asynclxd/workflows/CI/badge.svg
+   :alt: Build Status
+   :target: https://github.com/albertodonato/asynclxd/actions?query=workflow%3ACI
 .. |Coverage Status| image:: https://img.shields.io/codecov/c/github/albertodonato/asynclxd/master.svg
+   :alt: Coverage
    :target: https://codecov.io/gh/albertodonato/asynclxd
-.. |Documentation Status| image:: https://readthedocs.org/projects/asynclxd/badge/?version=stable
+.. |Documentation| image:: https://readthedocs.org/projects/asynclxd/badge/?version=stable
+   :alt: Documentation
    :target: https://asynclxd.readthedocs.io/en/stable/?badge=stable
