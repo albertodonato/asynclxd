@@ -1,6 +1,6 @@
-==========
+============
 asynclxd.uri
-==========
+============
 
 .. automodule:: asynclxd.uri
    :members:

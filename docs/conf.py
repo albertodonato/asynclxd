@@ -45,7 +45,7 @@ copyright = '{}, Alberto Donato'.format(datetime.today().year)
 # built documents.
 #
 # The short X.Y version.
-release = asynclxd.__version__
+release = str(asynclxd.__version__)
 # The full version, including alpha/beta/rc tags.
 version = release
 
