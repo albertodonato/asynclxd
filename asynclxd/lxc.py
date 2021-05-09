@@ -1,6 +1,10 @@
 """Helpers to access configuration for the LXD CLI (:data:`lxc`)."""
 
 from pathlib import Path
+from typing import (
+    Dict,
+    Optional,
+)
 
 from xdg.BaseDirectory import xdg_config_home
 import yaml
@@ -11,7 +15,7 @@ from .remote import (
 )
 
 
-def get_remotes(config_dir=None):
+def get_remotes(config_dir=None) -> Dict[str, Remote]:
     """Return :class:`Remote` instances from the :data:`lxc` config.
 
     Return a dict mapping remote names to :class:`asynclxd.remote.Remote`
@@ -39,12 +43,12 @@ def get_remotes(config_dir=None):
     }
 
 
-def cli_config_dir():
+def cli_config_dir() -> Path:
     """Return the configuration directory for the :data:`lxc` CLI."""
     return Path(xdg_config_home) / "lxc"
 
 
-def _get_certs(config_dir, remote_name):
+def _get_certs(config_dir, remote_name) -> Optional[SSLCerts]:
     """Return SSLCerts for the remote, or None if certs are not found."""
     config_dir = Path(config_dir)
     server_cert = config_dir / f"servercerts/{remote_name}.crt"

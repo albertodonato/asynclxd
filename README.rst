@@ -55,7 +55,7 @@ For example:
 .. |Build Status| image:: https://github.com/albertodonato/asynclxd/workflows/CI/badge.svg
    :alt: Build Status
    :target: https://github.com/albertodonato/asynclxd/actions?query=workflow%3ACI
-.. |Coverage Status| image:: https://img.shields.io/codecov/c/github/albertodonato/asynclxd/master.svg
+.. |Coverage Status| image:: https://img.shields.io/codecov/c/github/albertodonato/asynclxd/main.svg
    :alt: Coverage Status
    :target: https://codecov.io/gh/albertodonato/asynclxd
 .. |Documentation| image:: https://readthedocs.org/projects/asynclxd/badge/?version=stable
